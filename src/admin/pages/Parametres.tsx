@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Sun, Moon, ExternalLink, Wrench } from "lucide-react";
+import { Sun, Moon, ExternalLink, Wrench, Eye, EyeOff } from "lucide-react";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/lib/supabase";
@@ -51,6 +51,8 @@ const Parametres = () => {
   const [adminEmail, setAdminEmail] = useState("admin@tabatperfume.com");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showAdminConfirmPassword, setShowAdminConfirmPassword] = useState(false);
   const [savingAdmin, setSavingAdmin] = useState(false);
 
   // Maintenance State
@@ -223,23 +225,45 @@ const Parametres = () => {
         </div>
         <div>
           <label className={labelCls}>Nouveau mot de passe</label>
-          <input
-            type="password"
-            className={inputCls}
-            placeholder="••••••••"
-            value={adminPassword}
-            onChange={(e) => setAdminPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showAdminPassword ? "text" : "password"}
+              className={`${inputCls} pr-10`}
+              placeholder="••••••••"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowAdminPassword(!showAdminPassword)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors cursor-pointer"
+              title={showAdminPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
         <div>
           <label className={labelCls}>Confirmer le mot de passe</label>
-          <input
-            type="password"
-            className={inputCls}
-            placeholder="••••••••"
-            value={adminConfirmPassword}
-            onChange={(e) => setAdminConfirmPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showAdminConfirmPassword ? "text" : "password"}
+              className={`${inputCls} pr-10`}
+              placeholder="••••••••"
+              value={adminConfirmPassword}
+              onChange={(e) => setAdminConfirmPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowAdminConfirmPassword(!showAdminConfirmPassword)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors cursor-pointer"
+              title={showAdminConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showAdminConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </Card>
 
