@@ -19,7 +19,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-10 md:mb-14">
           {/* Column 1: Brand Info */}
           <div className="space-y-4">
-            <Link to="/" className="inline-block transition-transform hover:scale-105">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="inline-block transition-transform hover:scale-105 cursor-pointer"
+              aria-label="TABAT - Retour en haut"
+            >
               <img
                 src="/logo.png"
                 alt="TABAT"

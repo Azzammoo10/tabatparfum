@@ -151,7 +151,13 @@ const Navigation = () => {
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-auto z-20">
           <Link
             to="/"
-            className="flex items-center justify-center px-2 py-0.5 transition-transform duration-200 hover:scale-105 select-none"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsSearchOpen(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center justify-center px-2 py-0.5 transition-transform duration-200 hover:scale-105 select-none cursor-pointer"
+            aria-label="TABAT - Accueil"
           >
             <img
               src="/logo.png"
