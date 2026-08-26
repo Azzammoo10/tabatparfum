@@ -303,28 +303,36 @@ const Collection = () => {
               <h2 className="sr-only">Liste des parfums</h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {filtered.map((p) => {
-                  const outOfStock = !p.is_active || p.stock_status === "rupture";
                   const isFull = p.sale_mode === "full_bottle";
+                  const outOfStock =
+                    !p.is_active ||
+                    p.stock_status === "rupture" ||
+                    (isFull && typeof p.full_bottle_stock === "number" && p.full_bottle_stock <= 0) ||
+                    (!isFull && typeof p.stock_5ml === "number" && typeof p.stock_10ml === "number" && p.stock_5ml <= 0 && p.stock_10ml <= 0);
+
                   return (
                     <Link
                       key={p.id}
                       to={`/parfum/${p.id}`}
-                      className="group block rounded-2xl p-2 sm:p-3 transition-all hover:bg-card/50 hover:shadow-sm relative text-left"
+                      className={`group block rounded-2xl p-2 sm:p-3 transition-all hover:bg-card/50 hover:shadow-sm relative text-left ${
+                        outOfStock ? "opacity-75" : ""
+                      }`}
                     >
-                      <div className="relative mb-2">
+                      <div className="relative mb-2 overflow-hidden rounded-xl bg-muted/40">
                         <ProductImage
                           src={p.image_url}
                           alt={p.name}
                           label={p.image_label}
                           aspect="aspect-[4/5]"
                           fitMode="contain"
-                          className={`max-h-48 sm:max-h-56 mx-auto transition-opacity ${
-                            outOfStock ? "opacity-40" : "group-hover:opacity-90"
+                          className={`max-h-48 sm:max-h-56 mx-auto transition-all duration-300 ${
+                            outOfStock ? "grayscale opacity-50 contrast-75" : "group-hover:scale-105 group-hover:opacity-90"
                           }`}
                         />
                         {outOfStock && (
-                          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-widest bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full font-semibold">
-                            Rupture
+                          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-2.5 py-0.5 rounded-full font-bold border border-zinc-700/60 shadow-md">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            <span>Rupture</span>
                           </span>
                         )}
                         {p.is_new && !outOfStock && (
@@ -337,14 +345,18 @@ const Collection = () => {
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
                         {p.maison}
                       </p>
-                      <h3 className="font-serif text-xs sm:text-sm text-foreground font-medium truncate mt-0.5">
+                      <h3 className={`font-serif text-xs sm:text-sm font-medium truncate mt-0.5 ${
+                        outOfStock ? "text-muted-foreground" : "text-foreground"
+                      }`}>
                         {p.name}
                       </h3>
 
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
-                        <span className="text-xs font-serif font-bold text-primary">
+                        <span className={`text-xs font-serif font-bold ${
+                          outOfStock ? "text-muted-foreground line-through opacity-70" : "text-primary"
+                        }`}>
                           {outOfStock
-                            ? "Indisponible"
+                            ? "Rupture de stock"
                             : isFull
                             ? formatMAD(p.full_bottle_price ?? 0)
                             : `À partir de ${formatMAD(p.price_5ml)}`}

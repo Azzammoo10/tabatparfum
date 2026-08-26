@@ -93,24 +93,45 @@ const SeasonalSection = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {featured.map((p, idx) => {
             if (!p) return null;
+            const isFull = p.sale_mode === "full_bottle";
+            const outOfStock =
+              !p.is_active ||
+              p.stock_status === "rupture" ||
+              (isFull && typeof p.full_bottle_stock === "number" && p.full_bottle_stock <= 0) ||
+              (!isFull && typeof p.stock_5ml === "number" && typeof p.stock_10ml === "number" && p.stock_5ml <= 0 && p.stock_10ml <= 0);
+
             return (
               <Link
                 key={p.id}
                 to={`/parfum/${p.id}`}
-                className="block group relative transition-all duration-500 hover:-translate-y-1"
+                className={`block group relative transition-all duration-500 hover:-translate-y-1 ${
+                  outOfStock ? "opacity-75" : ""
+                }`}
                 style={{ animationDelay: `${idx * 150}ms` }}
               >
                 {/* Image Container */}
-                <div className="relative mb-2.5 sm:mb-3 overflow-hidden rounded-sm bg-muted">
+                <div className="relative mb-2.5 sm:mb-3 overflow-hidden rounded-xl bg-muted/40">
                   <ProductImage
                     src={p.image_url}
                     alt={p.name}
                     label={p.image_label}
-                    className="group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className={`transition-all duration-700 ease-out ${
+                      outOfStock ? "grayscale opacity-50 contrast-75" : "group-hover:scale-105"
+                    }`}
                   />
 
+                  {/* Out of stock badge */}
+                  {outOfStock && (
+                    <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-2.5 py-0.5 rounded-full font-bold border border-zinc-700/60 shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span>Rupture</span>
+                    </span>
+                  )}
+
                   {/* Light Sweep Shimmer Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+                  {!outOfStock && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+                  )}
 
                   {/* Floating Seasonal Animated Tag */}
                   <div className="absolute top-2 right-2 backdrop-blur-md bg-background/85 text-primary border border-primary/30 px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] uppercase tracking-wider font-medium opacity-90 group-hover:scale-110 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 flex items-center gap-1 shadow-sm">
@@ -123,14 +144,22 @@ const SeasonalSection = () => {
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground truncate transition-colors duration-300 group-hover:text-primary">
                   {p.maison}
                 </p>
-                <h3 className="font-serif text-sm sm:text-lg text-foreground mt-0.5 sm:mt-1 truncate font-medium group-hover:text-primary transition-colors duration-300">
+                <h3 className={`font-serif text-sm sm:text-lg mt-0.5 sm:mt-1 truncate font-medium transition-colors duration-300 ${
+                  outOfStock ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
+                }`}>
                   {p.name}
                 </h3>
                 <div className="flex items-center justify-between mt-2 pt-1 border-t sm:border-t-0 border-border/30">
-                  <span className="text-[11px] sm:text-xs font-light text-foreground/80">
-                    À partir de {formatMAD(p.price_5ml)}
+                  <span className={`text-[11px] sm:text-xs font-light ${
+                    outOfStock ? "text-muted-foreground line-through opacity-70" : "text-foreground/80"
+                  }`}>
+                    {outOfStock
+                      ? "Rupture de stock"
+                      : isFull
+                      ? formatMAD(p.full_bottle_price ?? 0)
+                      : `À partir de ${formatMAD(p.price_5ml)}`}
                   </span>
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-primary border border-primary/40 px-1.5 sm:px-2 py-0.5 rounded-sm group-hover:bg-primary/10 transition-colors duration-300">
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground bg-secondary/80 border border-border/40 px-1.5 sm:px-2 py-0.5 rounded-sm">
                     {p.gender}
                   </span>
                 </div>

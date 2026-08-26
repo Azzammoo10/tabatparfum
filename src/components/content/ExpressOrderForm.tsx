@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatMAD } from "@/lib/sizes";
 import { toast } from "sonner";
-import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag } from "lucide-react";
+import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag, AlertCircle, Bell } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export interface OrderSelectionItem {
@@ -64,8 +64,13 @@ const ExpressOrderForm = ({
   const handleWhatsAppOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (outOfStock) {
+      toast.error("Ce produit est actuellement en rupture de stock.");
+      return;
+    }
+
     if (activeItems.length === 0) {
-      toast.error("Veuillez sélectionner au moins un format");
+      toast.error("Veuillez sélectionner au moins un format disponible");
       return;
     }
     if (!fullName.trim()) {
@@ -152,6 +157,43 @@ const ExpressOrderForm = ({
     setIsSubmitting(false);
     toast.success("Commande enregistrée et transmise sur WhatsApp !");
   };
+
+  if (outOfStock) {
+    const notifyMsg = `Bonjour, je souhaite être notifié(e) du retour en stock du parfum : ${maison} — ${parfumName}`;
+    const notifyUrl = `https://wa.me/${TABAT_WHATSAPP}?text=${encodeURIComponent(notifyMsg)}`;
+
+    return (
+      <div className="relative overflow-hidden bg-card/90 backdrop-blur-md border-2 border-border/80 rounded-2xl p-5 space-y-4 shadow-xl text-center animate-in fade-in zoom-in-95">
+        <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+
+        <div className="space-y-1.5">
+          <span className="text-[10px] uppercase tracking-widest text-destructive font-bold bg-destructive/10 border border-destructive/20 px-2.5 py-0.5 rounded-full">
+            Indisponible à la commande
+          </span>
+          <h3 className="font-serif text-lg font-bold text-foreground">
+            Produit en Rupture de Stock
+          </h3>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Ce parfum est actuellement épuisé. Les commandes pour ce produit sont temporairement suspendues jusqu'au prochain réapprovisionnement.
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-border/40">
+          <a
+            href={notifyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 w-full h-11 rounded-full bg-primary/10 border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground font-semibold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
+          >
+            <Bell className="w-4 h-4" />
+            <span>M'alerter du retour en stock</span>
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -295,7 +337,6 @@ const ExpressOrderForm = ({
         {onAddToCart && (
           <Button
             type="button"
-            disabled={outOfStock}
             onClick={onAddToCart}
             className="w-full h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover uppercase tracking-[0.18em] text-[11px] font-bold shadow-md hover:scale-[1.01] transition-all gap-2"
           >
@@ -305,7 +346,7 @@ const ExpressOrderForm = ({
 
         <Button
           type="submit"
-          disabled={outOfStock || isSubmitting}
+          disabled={isSubmitting}
           className="relative overflow-hidden group w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold text-xs uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 gap-2"
         >
           <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current shrink-0 group-hover:rotate-12 transition-transform duration-300" aria-hidden="true">

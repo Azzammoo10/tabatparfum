@@ -62,6 +62,9 @@ const persist = () => {
 const emit = () => {
   persist();
   listeners.forEach((l) => l());
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("tabat_products_updated"));
+  }
 };
 
 const subscribe = (l: () => void) => {

@@ -35,6 +35,14 @@ const ParfumDetail = () => {
   useEffect(() => {
     if (!parfum) return;
     const isFull = parfum.sale_mode === "full_bottle";
+    const fullStock = parfum.full_bottle_stock ?? 0;
+    const decantStock = (parfum.stock_5ml ?? 0) + (parfum.stock_10ml ?? 0);
+    const isOutOfStock =
+      !parfum.is_active ||
+      parfum.stock_status === "rupture" ||
+      (isFull && fullStock <= 0) ||
+      (!isFull && decantStock <= 0);
+
     const sizes: Size[] = isFull
       ? ["full"]
       : (["5ml", "10ml", "20ml"] as Size[]).filter((s) => {
@@ -44,10 +52,21 @@ const ParfumDetail = () => {
 
     const initial: Record<string, number> = {};
     sizes.forEach((s, idx) => {
-      initial[s] = idx === 0 ? 1 : 0;
+      initial[s] = idx === 0 && !isOutOfStock ? 1 : 0;
     });
     setQuantities(initial);
-  }, [parfum?.id, parfum?.sale_mode, parfum?.price_5ml, parfum?.price_10ml, parfum?.price_20ml]);
+  }, [
+    parfum?.id,
+    parfum?.sale_mode,
+    parfum?.is_active,
+    parfum?.stock_status,
+    parfum?.full_bottle_stock,
+    parfum?.stock_5ml,
+    parfum?.stock_10ml,
+    parfum?.price_5ml,
+    parfum?.price_10ml,
+    parfum?.price_20ml,
+  ]);
 
   const updateSizeQty = (s: Size, delta: number) => {
     setQuantities((prev) => {
@@ -142,6 +161,11 @@ const ParfumDetail = () => {
   const totalPrice = selectedItems.reduce((acc, it) => acc + it.subtotal, 0);
 
   const handleAddToCart = () => {
+    if (outOfStock) {
+      toast.error("Ce produit est actuellement en rupture de stock.");
+      return;
+    }
+
     if (selectedItems.length === 0) {
       toast.error("Veuillez choisir une quantité pour au moins un format");
       return;
@@ -236,18 +260,27 @@ const ParfumDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 items-start">
             {/* LEFT COLUMN: Crystal Clear Product Image + Flacon Preview */}
             <div className="md:col-span-5 w-full space-y-3 md:sticky md:top-24">
-              <div className="relative group">
+              <div className="relative group overflow-hidden rounded-2xl">
                 <ProductImage
                   src={parfum.image_url}
                   alt={parfum.name}
                   label={parfum.image_label}
                   aspect="aspect-[4/5]"
                   fitMode="cover"
-                  className="max-h-[260px] sm:max-h-[380px] md:max-h-[440px] w-full mx-auto"
+                  className={`max-h-[260px] sm:max-h-[380px] md:max-h-[440px] w-full mx-auto transition-all duration-500 ${
+                    outOfStock ? "grayscale opacity-60 contrast-75" : ""
+                  }`}
                 />
 
+                {outOfStock && (
+                  <span className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-3 py-1 rounded-full font-bold border border-zinc-700/60 shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span>Rupture de Stock</span>
+                  </span>
+                )}
+
                 {/* Glass Spray Bottle Badge Preview */}
-                {!isFullBottle && (
+                {!isFullBottle && !outOfStock && (
                   <div
                     className="absolute top-3 right-3 z-20 bg-background/95 dark:bg-black/90 backdrop-blur-md border border-primary/50 rounded-2xl p-2.5 shadow-xl animate-in zoom-in-95 fade-in duration-300 flex flex-col items-center gap-1 min-w-[68px]"
                   >
@@ -350,6 +383,17 @@ const ParfumDetail = () => {
                           : "Flacon Scellé Original"
                         : SIZE_META[s]?.sub ?? "Décantation";
 
+                    const formatStock =
+                      s === "full"
+                        ? (parfum.full_bottle_stock ?? 0)
+                        : s === "5ml"
+                        ? (parfum.stock_5ml ?? 99)
+                        : s === "10ml"
+                        ? (parfum.stock_10ml ?? 99)
+                        : 99;
+
+                    const isFormatOutOfStock = outOfStock || (typeof formatStock === "number" && formatStock <= 0);
+
                     const qty = quantities[s] ?? 0;
                     const isSelected = qty > 0;
                     const unitPrice = priceFor(parfum, s);
@@ -358,42 +402,52 @@ const ParfumDetail = () => {
                       <div
                         key={s}
                         className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                          isSelected
+                          isFormatOutOfStock
+                            ? "opacity-50 border-border/50 bg-muted/20 cursor-not-allowed"
+                            : isSelected
                             ? "border-primary bg-primary/10 shadow-sm"
                             : "border-border/80 bg-card/40 hover:border-primary/40"
                         }`}
                       >
                         {/* Format Info */}
                         <div
-                          className="flex-1 cursor-pointer select-none"
+                          className={`flex-1 select-none ${isFormatOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                           onClick={() => {
-                            if (qty === 0) setDirectSizeQty(s, 1);
+                            if (!isFormatOutOfStock && qty === 0) setDirectSizeQty(s, 1);
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="font-serif text-base font-bold text-foreground">
+                            <span className={`font-serif text-base font-bold ${isFormatOutOfStock ? "text-muted-foreground line-through" : "text-foreground"}`}>
                               {formatLabel}
                             </span>
                             <span className="text-[10px] text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full border border-border/50">
                               {formatSub}
                             </span>
+                            {isFormatOutOfStock && (
+                              <span className="text-[9px] font-bold text-destructive uppercase tracking-wider bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20">
+                                Épuisé
+                              </span>
+                            )}
                           </div>
-                          <div className="text-xs font-serif font-bold text-primary mt-0.5">
-                            {formatMAD(unitPrice)} <span className="text-[10px] font-normal text-muted-foreground">/ unité</span>
+                          <div className={`text-xs font-serif font-bold mt-0.5 ${isFormatOutOfStock ? "text-muted-foreground" : "text-primary"}`}>
+                            {isFormatOutOfStock ? "Indisponible" : `${formatMAD(unitPrice)} `}
+                            {!isFormatOutOfStock && <span className="text-[10px] font-normal text-muted-foreground">/ unité</span>}
                           </div>
                         </div>
 
                         {/* Individual Quantity Stepper */}
                         <div className="flex items-center gap-2 shrink-0">
-                          <div className="flex items-center border border-border rounded-full bg-background px-1.5 py-0.5 shadow-xs">
+                          <div className={`flex items-center border rounded-full px-1.5 py-0.5 shadow-xs ${
+                            isFormatOutOfStock ? "border-border/40 bg-muted/40 opacity-40" : "border-border bg-background"
+                          }`}>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                updateSizeQty(s, -1);
+                                if (!isFormatOutOfStock) updateSizeQty(s, -1);
                               }}
-                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30"
-                              disabled={qty === 0}
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              disabled={qty === 0 || isFormatOutOfStock}
                               aria-label={`Diminuer ${formatLabel}`}
                             >
                               <Minus size={13} />
@@ -405,9 +459,10 @@ const ParfumDetail = () => {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                updateSizeQty(s, 1);
+                                if (!isFormatOutOfStock) updateSizeQty(s, 1);
                               }}
-                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              disabled={isFormatOutOfStock || (typeof formatStock === "number" && qty >= formatStock)}
                               aria-label={`Augmenter ${formatLabel}`}
                             >
                               <Plus size={13} />

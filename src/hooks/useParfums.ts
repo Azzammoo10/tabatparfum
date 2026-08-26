@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Gender, Parfum } from "@/types/database";
-import { parfums as staticParfums } from "@/data/parfums";
+import { getProducts } from "@/store/useProductStore";
 
 export type ParfumFilter = {
   gender?: Gender;
@@ -11,34 +11,45 @@ export type ParfumFilter = {
   category?: string;
 };
 
-// Convert static data format to Database Parfum format
+// Convert products to Database Parfum format with live stocks
 const formatStaticParfums = (): Parfum[] => {
-  return staticParfums.map((p) => ({
-    id: p.id,
-    name: p.name,
-    maison: p.maison,
-    gender: p.gender,
-    category: p.category,
-    description: p.description,
-    notes_tete: p.notes?.tete ?? [],
-    notes_coeur: p.notes?.coeur ?? [],
-    notes_fond: p.notes?.fond ?? [],
-    price_5ml: p.prices['5ml'],
-    price_10ml: p.prices['10ml'],
-    price_20ml: p.prices['20ml'],
-    image_label: p.imageLabel,
-    image_url: p.image_url ?? null,
-    is_active: true,
-    is_new: !!p.isNew,
-    is_bestseller: !!p.isBestseller,
-    stock_status: 'actif',
-    sale_mode: p.sale_mode ?? 'decant',
-    full_bottle_price: p.full_bottle_price ?? null,
-    full_bottle_volume_ml: p.sale_mode === 'full_bottle' ? 50 : null,
-    full_bottle_stock: 10,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
+  const products = getProducts();
+  return products.map((p) => {
+    const isFull = (p.sale_mode ?? "decant") === "full_bottle" || p.category === "deodorants-stick" || p.category === "packs";
+    const fullStock = p.full_bottle_stock ?? 0;
+    const decantStock = (p.stock_5ml ?? 0) + (p.stock_10ml ?? 0);
+    const totalStock = isFull ? fullStock : decantStock;
+    const inStock = (p.active ?? true) && totalStock > 0;
+
+    return {
+      id: p.id,
+      name: p.name,
+      maison: p.maison,
+      gender: p.gender,
+      category: p.category,
+      description: p.description,
+      notes_tete: p.notes?.tete ?? [],
+      notes_coeur: p.notes?.coeur ?? [],
+      notes_fond: p.notes?.fond ?? [],
+      price_5ml: p.prices?.['5ml'] ?? 0,
+      price_10ml: p.prices?.['10ml'] ?? 0,
+      price_20ml: p.prices?.['20ml'] ?? 0,
+      image_label: p.imageLabel,
+      image_url: p.image_url ?? null,
+      is_active: inStock,
+      is_new: !!p.isNew,
+      is_bestseller: !!p.isBestseller,
+      stock_status: inStock ? 'actif' : 'rupture',
+      sale_mode: isFull ? 'full_bottle' : (p.sale_mode ?? 'decant'),
+      full_bottle_price: p.full_bottle_price ?? p.prices?.['5ml'] ?? null,
+      full_bottle_volume_ml: p.full_bottle_volume_ml ?? (p.sale_mode === 'full_bottle' ? 50 : null),
+      full_bottle_stock: fullStock,
+      stock_5ml: p.stock_5ml ?? 0,
+      stock_10ml: p.stock_10ml ?? 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  });
 };
 
 const getActiveBestsellerIds = (): string[] => {
@@ -112,7 +123,11 @@ export const useParfums = (filter?: ParfumFilter) => {
   useEffect(() => {
     const handleUpdate = () => load();
     window.addEventListener("tabat_bestsellers_updated", handleUpdate);
-    return () => window.removeEventListener("tabat_bestsellers_updated", handleUpdate);
+    window.addEventListener("tabat_products_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("tabat_bestsellers_updated", handleUpdate);
+      window.removeEventListener("tabat_products_updated", handleUpdate);
+    };
   }, [load]);
 
   useEffect(() => {
@@ -127,49 +142,50 @@ export const useParfum = (id?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    const run = async () => {
-      if (!id) {
-        setData(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      try {
-        const { data: row, error: err } = await supabase
-          .from("parfums")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
+  const fetchItem = useCallback(async () => {
+    if (!id) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: row, error: err } = await supabase
+        .from("parfums")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
 
-        if (!alive) return;
-        if (!err && row) {
-          setData(row as unknown as Parfum);
-        } else if (!err && !row) {
-          setData(null);
-        } else {
-          const statics = formatStaticParfums();
-          const found = statics.find((p) => p.id === id) ?? null;
-          setData(found);
-        }
-      } catch {
-        if (!alive) return;
+      if (!err && row) {
+        setData(row as unknown as Parfum);
+      } else if (!err && !row) {
+        setData(null);
+      } else {
         const statics = formatStaticParfums();
         const found = statics.find((p) => p.id === id) ?? null;
         setData(found);
-      } finally {
-        if (alive) setLoading(false);
       }
-    };
-    run();
-    return () => {
-      alive = false;
-    };
+    } catch {
+      const statics = formatStaticParfums();
+      const found = statics.find((p) => p.id === id) ?? null;
+      setData(found);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  return { data, loading, error };
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
+
+  useEffect(() => {
+    const handleUpdate = () => fetchItem();
+    window.addEventListener("tabat_products_updated", handleUpdate);
+    return () => window.removeEventListener("tabat_products_updated", handleUpdate);
+  }, [fetchItem]);
+
+  return { data, loading, error, refetch: fetchItem };
 };
 
 /** Synchronous helper: fetch parfums by id list at once (for cart display). */
