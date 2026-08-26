@@ -19,10 +19,43 @@ const WhatsAppIcon = ({ className = "w-7 h-7" }: { className?: string }) => (
   </svg>
 );
 
+const DEFAULT_QAS: QA[] = [
+  {
+    id: "qa-1",
+    question: "🚚 Quels sont vos délais de livraison au Maroc ?",
+    answer: "La livraison est rapide et express partout au Maroc sous 24h à 48h. Le paiement s'effectue en espèces à la livraison.",
+  },
+  {
+    id: "qa-2",
+    question: "✨ Vos parfums sont-ils 100% authentiques ?",
+    answer: "Garantie 100% Authenticité. Tous nos jus sont prélevés directement des flacons officiels scellés des plus grandes maisons de parfumerie.",
+  },
+  {
+    id: "qa-3",
+    question: "📏 Comment choisir le format (5ml, 10ml, 20ml) ?",
+    answer: "• 5ml (~75 sprays) : Parfait pour tester et voyager.\n• 10ml (~150 sprays) : 3 à 4 semaines d'utilisation quotidienne.\n• 20ml (~300 sprays) : Format économique pour vos parfums favoris.",
+  },
+  {
+    id: "qa-4",
+    question: "🔥 Quels sont les Best-Sellers du moment ?",
+    answer: "Pour Homme : Jean Paul Gaultier Le Beau, YSL Y EDP & Afnan 9PM.\nPour Femme : Valentino Born In Roma Intense, Prada Paradoxe & Baccarat Rouge 540.",
+  },
+  {
+    id: "qa-5",
+    question: "💵 Quel est le mode de paiement ?",
+    answer: "Paiement à la livraison (Cash on Delivery). Vous ne payez qu'à la réception de votre colis auprès du livreur.",
+  },
+  {
+    id: "qa-6",
+    question: "🎁 Avez-vous des packs découverte ?",
+    answer: "Oui ! Découvrez nos Packs Découverte dans l'onglet Collection Packs avec des tarifs avantageux et des combinaisons exclusives.",
+  },
+];
+
 const ChatBot = () => {
   const { settings } = useAppSettings();
   const [open, setOpen] = useState(false);
-  const [qas, setQas] = useState<QA[]>([]);
+  const [qas, setQas] = useState<QA[]>(DEFAULT_QAS);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -35,7 +68,7 @@ const ChatBot = () => {
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
-        if (data) setQas(data as QA[]);
+        if (data && data.length > 0) setQas(data as QA[]);
       });
   }, [settings.bot_enabled]);
 

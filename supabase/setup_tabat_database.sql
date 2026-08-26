@@ -227,3 +227,12 @@ ON CONFLICT (id) DO UPDATE SET
     full_bottle_price = EXCLUDED.full_bottle_price,
     image_url = EXCLUDED.image_url,
     updated_at = NOW();
+
+INSERT INTO public.bot_qa (question, answer, is_active, sort_order) VALUES
+('🚚 Quels sont vos délais de livraison au Maroc ?', 'La livraison est rapide et express partout au Maroc sous 24h à 48h. Le paiement s''effectue en espèces à la livraison.', true, 1),
+('✨ Vos parfums sont-ils 100% authentiques ?', 'Garantie 100% Authenticité. Tous nos jus sont prélevés directement des flacons officiels scellés des plus grandes maisons de parfumerie.', true, 2),
+('📏 Comment choisir le format (5ml, 10ml, 20ml) ?', '• 5ml (~75 sprays) : Parfait pour tester et voyager.\n• 10ml (~150 sprays) : 3 à 4 semaines d''utilisation quotidienne.\n• 20ml (~300 sprays) : Format économique pour vos parfums favoris.', true, 3),
+('🔥 Quels sont les Best-Sellers du moment ?', 'Pour Homme : Jean Paul Gaultier Le Beau, YSL Y EDP & Afnan 9PM.\nPour Femme : Valentino Born In Roma Intense, Prada Paradoxe & Baccarat Rouge 540.', true, 4),
+('💵 Quel est le mode de paiement ?', 'Paiement à la livraison (Cash on Delivery). Vous ne payez qu''à la réception de votre colis auprès du livreur.', true, 5),
+('🎁 Avez-vous des packs découverte ?', 'Oui ! Découvrez nos Packs Découverte dans l''onglet Collection Packs avec des tarifs avantageux et des combinaisons exclusives.', true, 6);
+
