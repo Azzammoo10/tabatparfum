@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Truck, ShieldCheck, Mail, Sparkles, MessageSquare } from "lucide-react";
+import { Truck, ShieldCheck, Mail, Sparkles, MessageSquare, Instagram } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -21,6 +21,18 @@ const Footer = () => {
             <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed max-w-sm">
               Sélection rigoureuse des plus grandes maisons de parfum. Flacons originaux et échantillons décantés de 5ml à 20ml livrés partout au Maroc.
             </p>
+            <div className="pt-1">
+              <a
+                href="https://www.instagram.com/tabatperfumes"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram TABAT"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-background/50 hover:border-primary hover:text-primary text-xs font-medium transition-all duration-200"
+              >
+                <Instagram className="w-3.5 h-3.5 text-primary" />
+                <span>@tabatperfumes</span>
+              </a>
+            </div>
           </div>
 
           {/* Column 2: Collections */}
@@ -78,7 +90,20 @@ const Footer = () => {
                 </Link>
               </div>
 
-              <div className="flex items-start gap-2.5 pt-2">
+              <a
+                href="https://www.instagram.com/tabatperfumes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2.5 hover:text-primary transition-colors group cursor-pointer"
+              >
+                <Instagram className="w-4 h-4 text-primary shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                <div>
+                  <p className="font-medium text-foreground text-xs uppercase tracking-wider group-hover:text-primary transition-colors">Instagram</p>
+                  <p className="text-xs">@tabatperfumes</p>
+                </div>
+              </a>
+
+              <div className="flex items-start gap-2.5">
                 <Truck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-foreground text-xs uppercase tracking-wider">Livraison Express</p>
@@ -110,9 +135,21 @@ const Footer = () => {
           <p className="text-xs font-light text-muted-foreground/80">
             © {new Date().getFullYear()} TABAT. Tous droits réservés.
           </p>
-          <div className="flex items-center gap-2 text-xs font-light text-muted-foreground/80">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span>Haute Parfumerie au Maroc</span>
+          <div className="flex items-center gap-4 text-xs font-light text-muted-foreground/80">
+            <a
+              href="https://www.instagram.com/tabatperfumes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary flex items-center gap-1.5 transition-colors"
+            >
+              <Instagram className="w-3.5 h-3.5 text-primary" />
+              <span>Instagram</span>
+            </a>
+            <span>•</span>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span>Haute Parfumerie au Maroc</span>
+            </div>
           </div>
         </div>
       </div>

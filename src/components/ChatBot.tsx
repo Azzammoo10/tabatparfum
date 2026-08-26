@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Sparkles } from "lucide-react";
+import { MessageCircle, X, Sparkles, Instagram } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppSettings } from "@/hooks/useAppSettings";
 
@@ -97,6 +97,19 @@ const ChatBot = () => {
 
   return (
     <>
+      {/* Floating Instagram Launcher Button (Positioned above WhatsApp & ChatBot) */}
+      <a
+        href="https://www.instagram.com/tabatperfumes"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Suivez-nous sur Instagram"
+        className="fixed bottom-[9.25rem] right-5 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+        title="Suivez-nous sur Instagram (@tabatperfumes)"
+      >
+        <span className="absolute inset-0 rounded-full bg-[#dc2743]/30 animate-pulse" />
+        <Instagram className="w-7 h-7 relative" />
+      </a>
+
       {/* Floating WhatsApp Launcher Button (Positioned directly above ChatBot) */}
       <a
         href="https://wa.me/212752850156"
