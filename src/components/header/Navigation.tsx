@@ -142,7 +142,7 @@ const Navigation = () => {
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
-              <span>Déos</span>
+              <span>Déodorants</span>
             </Link>
           </div>
         </div>
