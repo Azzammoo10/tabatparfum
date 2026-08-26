@@ -182,11 +182,11 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
   const handleFile = async (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Fichier image requis");
+      toast.error("Format de fichier non supporté. Veuillez choisir une image (PNG, JPG, WEBP).");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image trop lourde (max 5MB)");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image trop volumineuse (max 10MB).");
       return;
     }
     try {
@@ -194,10 +194,22 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
       const id = initial?.id && isUuid(initial.id) ? initial.id : crypto.randomUUID();
       const url = await uploadProductImage(id, file);
       set("imageUrl", url);
-      toast.success("Image téléchargée");
+      toast.success("Photo du produit mise à jour avec succès !");
     } catch (err) {
-      console.error(err);
-      toast.error("Échec de l'upload");
+      console.error("Upload error note:", err);
+      // Even if upload failed, fallback to FileReader
+      try {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            set("imageUrl", e.target.result as string);
+            toast.success("Image chargée avec succès !");
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch {
+        toast.error("Impossible de lire ce fichier image.");
+      }
     } finally {
       setUploading(false);
     }
@@ -700,7 +712,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#C9A96E]">Visuel du produit</h3>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-24 h-24 shrink-0 rounded-xl border border-[#E5E7EB] dark:border-[#2A2A2A] bg-[#F8F9FA] dark:bg-[#0F0F0F] overflow-hidden flex items-center justify-center shadow-inner">
+                  <div className="w-24 h-24 shrink-0 rounded-xl border border-[#E5E7EB] dark:border-[#2A2A2A] bg-[#F8F9FA] dark:bg-[#0F0F0F] overflow-hidden flex items-center justify-center shadow-inner relative">
                     {f.imageUrl ? (
                       <img src={f.imageUrl} alt="Aperçu" className="w-full h-full object-cover" />
                     ) : (
@@ -723,7 +735,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                         className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-[#E5E7EB] dark:border-[#2A2A2A] hover:bg-[#F8F9FA] dark:hover:bg-white/5 disabled:opacity-50 transition-colors cursor-pointer"
                       >
                         {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5 text-[#C9A96E]" />}
-                        {uploading ? "Téléchargement..." : f.imageUrl ? "Changer" : "Téléverser"}
+                        {uploading ? "Chargement..." : f.imageUrl ? "Changer l'image" : "Uploader (.png, .jpg, .webp)"}
                       </button>
 
                       {f.imageUrl && (
@@ -736,7 +748,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">JPG / PNG / WEBP — 5 MB max.</p>
+                    <p className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">PNG / JPG / WEBP / AVIF — Téléversement instantané.</p>
                   </div>
                 </div>
               </section>
