@@ -25,7 +25,7 @@ const ProductImage = ({
   return (
     <div
       className={cn(
-        "group/img relative w-full overflow-hidden rounded-2xl flex items-center justify-center bg-white dark:bg-white/10 dark:backdrop-blur-sm transition-all shadow-sm dark:shadow-none border border-black/5 dark:border-white/10",
+        "group/img relative w-full overflow-hidden flex items-center justify-center transition-all",
         aspect,
         className
       )}
@@ -35,8 +35,8 @@ const ProductImage = ({
         alt={alt}
         loading="lazy"
         className={cn(
-          "w-full h-full transition-transform duration-700 ease-out group-hover/img:scale-105 animate-fade-in dark:mix-blend-normal dark:filter dark:brightness-110",
-          fitMode === "cover" ? "object-cover" : "object-cover"
+          "w-full h-full transition-transform duration-500 ease-out group-hover/img:scale-105 animate-fade-in",
+          fitMode === "cover" ? "object-cover" : "object-contain"
         )}
       />
     </div>

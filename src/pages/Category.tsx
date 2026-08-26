@@ -466,14 +466,14 @@ const Collection = () => {
                       }`}
                     >
                       {/* Product Visual Container */}
-                      <div className="relative mb-3 overflow-hidden rounded-xl bg-muted/30 border border-border/40 aspect-[4/5] flex items-center justify-center">
+                      <div className="relative mb-3 overflow-hidden rounded-xl aspect-square w-full bg-card/20">
                         <ProductImage
                           src={p.image_url}
                           alt={p.name}
                           label={p.image_label}
-                          aspect="aspect-[4/5]"
-                          fitMode="contain"
-                          className={`max-h-48 sm:max-h-56 mx-auto transition-all duration-500 ${
+                          aspect="aspect-square"
+                          fitMode="cover"
+                          className={`w-full h-full transition-all duration-500 ${
                             outOfStock ? "grayscale opacity-50 contrast-75" : "group-hover:scale-108 group-hover:opacity-95"
                           }`}
                         />
