@@ -82,6 +82,19 @@ export const useParfums = (filter?: ParfumFilter) => {
     const bestsellerIds = getActiveBestsellerIds();
     const localParfums = formatStaticParfums();
 
+    // Immediately update with local items synchronously for 0ms delay
+    let immediate = localParfums;
+    if (filter?.gender) immediate = immediate.filter((p) => p.gender === filter.gender);
+    if (filter?.isNew !== undefined) immediate = immediate.filter((p) => p.is_new === filter.isNew);
+    if (filter?.isActive !== undefined) immediate = immediate.filter((p) => p.is_active === filter.isActive);
+    if (filter?.category) immediate = immediate.filter((p) => p.category === filter.category);
+    if (filter?.isBestseller) {
+      immediate = immediate
+        .filter((p) => bestsellerIds.includes(p.id))
+        .sort((a, b) => bestsellerIds.indexOf(a.id) - bestsellerIds.indexOf(b.id));
+    }
+    setData(immediate);
+
     try {
       let q = supabase.from("parfums").select("*").order("created_at", { ascending: false });
       if (filter?.gender) q = q.eq("gender", filter.gender);
@@ -89,19 +102,16 @@ export const useParfums = (filter?: ParfumFilter) => {
       if (filter?.isActive !== undefined) q = q.eq("is_active", filter.isActive);
       const { data: rows, error: err } = await q;
 
-      // Merge local store products with Supabase rows (Local admin updates take priority for immediate preview)
       const localMap = new Map(localParfums.map((p) => [p.id, p]));
       let merged: Parfum[] = [];
 
       if (!err && rows && rows.length > 0) {
         const supabaseRows = rows as unknown as Parfum[];
-        // Combine Supabase rows with local overrides
         const processedIds = new Set<string>();
 
         supabaseRows.forEach((row) => {
           const localOverride = localMap.get(row.id);
           if (localOverride) {
-            // Keep local updated image and fields if modified
             merged.push({
               ...row,
               ...localOverride,
@@ -114,7 +124,6 @@ export const useParfums = (filter?: ParfumFilter) => {
           }
         });
 
-        // Add any local products not present in Supabase
         localParfums.forEach((p) => {
           if (!processedIds.has(p.id)) {
             merged.push(p);
@@ -139,20 +148,37 @@ export const useParfums = (filter?: ParfumFilter) => {
 
       setData(result);
     } catch {
-      setData(localParfums);
+      setData(immediate);
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  // Live real-time update listeners across tabs and components
   useEffect(() => {
     const handleUpdate = () => load();
     window.addEventListener("tabat_bestsellers_updated", handleUpdate);
     window.addEventListener("tabat_products_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    // Supabase Realtime channel
+    const channel = supabase
+      .channel("realtime:parfums")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "parfums" },
+        () => {
+          load();
+        }
+      )
+      .subscribe();
+
     return () => {
       window.removeEventListener("tabat_bestsellers_updated", handleUpdate);
       window.removeEventListener("tabat_products_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      supabase.removeChannel(channel);
     };
   }, [load]);
 
@@ -181,6 +207,11 @@ export const useParfum = (id?: string) => {
     setError(null);
     const statics = formatStaticParfums();
     const localFound = statics.find((p) => p.id === id) ?? null;
+
+    // Immediately update with local item for instant 0ms feedback
+    if (localFound) {
+      setData(localFound);
+    }
 
     try {
       const { data: row, error: err } = await supabase
@@ -217,8 +248,25 @@ export const useParfum = (id?: string) => {
   useEffect(() => {
     const handleUpdate = () => fetchItem();
     window.addEventListener("tabat_products_updated", handleUpdate);
-    return () => window.removeEventListener("tabat_products_updated", handleUpdate);
-  }, [fetchItem]);
+    window.addEventListener("storage", handleUpdate);
+
+    const channel = supabase
+      .channel(`realtime:parfum:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "parfums", filter: `id=eq.${id}` },
+        () => {
+          fetchItem();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("tabat_products_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      supabase.removeChannel(channel);
+    };
+  }, [fetchItem, id]);
 
   return { data, loading, error, refetch: fetchItem };
 };

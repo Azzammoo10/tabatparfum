@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { parfums as seed, type Parfum } from "@/data/parfums";
 
 const STORAGE_KEY = "ne_products";
+const CHANNEL_NAME = "tabat_realtime_channel";
 
 export type SaleMode = "decant" | "full_bottle";
 
@@ -53,6 +54,34 @@ const load = (): AdminParfum[] => {
 let state: AdminParfum[] = load();
 const listeners = new Set<() => void>();
 
+// Set up Cross-Tab Broadcast Channel
+let broadcastChannel: BroadcastChannel | null = null;
+if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+  try {
+    broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+    broadcastChannel.onmessage = (event) => {
+      if (event.data?.type === "TABAT_PRODUCTS_SYNC") {
+        state = load();
+        listeners.forEach((l) => l());
+        window.dispatchEvent(new Event("tabat_products_updated"));
+      }
+    };
+  } catch (err) {
+    console.warn("BroadcastChannel init note:", err);
+  }
+}
+
+// Cross-tab storage event listener
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY || e.key === null) {
+      state = load();
+      listeners.forEach((l) => l());
+      window.dispatchEvent(new Event("tabat_products_updated"));
+    }
+  });
+}
+
 const persist = () => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -65,6 +94,13 @@ const emit = () => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("tabat_products_updated"));
   }
+  // Broadcast to other tabs immediately
+  try {
+    broadcastChannel?.postMessage({
+      type: "TABAT_PRODUCTS_SYNC",
+      timestamp: Date.now(),
+    });
+  } catch {}
 };
 
 const subscribe = (l: () => void) => {
