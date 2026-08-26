@@ -134,20 +134,6 @@ const AdminLayout = () => {
             Live
           </span>
         </div>
-
-        {/* View Live Store Button */}
-        <Link
-          to="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#C9A96E]/40 text-xs text-[#F9FAFB]/80 hover:text-white transition-all duration-200 group"
-        >
-          <div className="flex items-center gap-2">
-            <Store className="w-3.5 h-3.5 text-[#C9A96E] group-hover:scale-110 transition-transform" />
-            <span>Voir la boutique</span>
-          </div>
-          <ExternalLink className="w-3 h-3 text-white/40 group-hover:text-white transition-colors" />
-        </Link>
       </div>
 
       {/* Navigation Sections */}
