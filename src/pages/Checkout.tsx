@@ -33,18 +33,8 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAppSettings } from "@/hooks/useAppSettings";
 
-const TOP_CITIES = [
-  "Casablanca",
-  "Rabat",
-  "Marrakech",
-  "Tanger",
-  "Fès",
-  "Agadir",
-  "Meknès",
-  "Kénitra",
-  "Mohammedia",
-  "Salé",
-];
+import { useRef, useEffect } from "react";
+import { POPULAR_CITIES, searchMoroccanCities } from "@/data/moroccanCities";
 
 const Checkout = () => {
   const { items, totalItems, subtotal, updateQuantity, removeItem, clear } = useCart();
@@ -55,6 +45,10 @@ const Checkout = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("Casablanca");
+  const [cityQuery, setCityQuery] = useState("Casablanca");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const cityWrapperRef = useRef<HTMLDivElement>(null);
+
   const [notes, setNotes] = useState("");
   const [completeOrder, setCompleteOrder] = useState<{
     orderNumber: string;
@@ -66,10 +60,23 @@ const Checkout = () => {
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cityWrapperRef.current && !cityWrapperRef.current.contains(event.target as Node)) {
+        setShowCityDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const matchingCities = searchMoroccanCities(cityQuery, 10);
+
   const shippingCost = 0; // Free express delivery throughout Morocco
   const total = subtotal + shippingCost;
 
-  const isFormValid = fullName.trim() !== "" && phone.trim() !== "" && address.trim() !== "";
+  const isFormValid = fullName.trim() !== "" && phone.trim() !== "" && address.trim() !== "" && city.trim() !== "";
 
   const waRaw = settings.whatsapp_phone || "212752850156";
   const waNumber = waRaw.replace(/[^0-9]/g, "");
@@ -323,18 +330,28 @@ const Checkout = () => {
                       />
                     </div>
 
-                    {/* City Quick Pills & Input */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-primary" /> Ville de Destination *
+                    {/* City Autocomplete & Quick Selection from CSV */}
+                    <div className="space-y-2 relative" ref={cityWrapperRef}>
+                      <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-primary" /> Ville de Destination *
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-normal">
+                          {matchingCities.length > 0 && cityQuery ? `${matchingCities.length} résultat(s)` : "330+ villes desservies"}
+                        </span>
                       </Label>
 
-                      <div className="flex flex-wrap gap-1.5">
-                        {TOP_CITIES.map((c) => (
+                      {/* Top Popular City Quick Badges */}
+                      <div className="flex flex-wrap gap-1.5 pb-1">
+                        {POPULAR_CITIES.slice(0, 7).map((c) => (
                           <button
                             key={c}
                             type="button"
-                            onClick={() => setCity(c)}
+                            onClick={() => {
+                              setCity(c);
+                              setCityQuery(c);
+                              setShowCityDropdown(false);
+                            }}
                             className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                               city.toLowerCase() === c.toLowerCase()
                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
@@ -346,15 +363,64 @@ const Checkout = () => {
                         ))}
                       </div>
 
-                      <Input
-                        id="city"
-                        type="text"
-                        required
-                        placeholder="Ou saisissez votre ville..."
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="h-11 text-xs sm:text-sm rounded-xl bg-background border-border/80 focus:border-primary mt-1"
-                      />
+                      {/* City Search & Auto-complete input */}
+                      <div className="relative">
+                        <Input
+                          id="city"
+                          type="text"
+                          required
+                          placeholder="Rechercher votre ville (ex: Casablanca, Marrakech, Agadir, Nador)..."
+                          value={cityQuery}
+                          onFocus={() => setShowCityDropdown(true)}
+                          onChange={(e) => {
+                            setCityQuery(e.target.value);
+                            setCity(e.target.value);
+                            setShowCityDropdown(true);
+                          }}
+                          className="h-11 text-xs sm:text-sm rounded-xl bg-background border-border/80 focus:border-primary pr-8"
+                        />
+                        {cityQuery && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCityQuery("");
+                              setCity("");
+                              setShowCityDropdown(true);
+                            }}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs p-1"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Autocomplete Dropdown List */}
+                      {showCityDropdown && matchingCities.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-xl z-50 p-1.5 max-h-48 overflow-y-auto space-y-0.5 animate-in fade-in-0 duration-150">
+                          {matchingCities.map((cityName) => (
+                            <button
+                              key={cityName}
+                              type="button"
+                              onClick={() => {
+                                setCity(cityName);
+                                setCityQuery(cityName);
+                                setShowCityDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                                city.toLowerCase() === cityName.toLowerCase()
+                                  ? "bg-primary/10 text-primary font-semibold"
+                                  : "text-foreground hover:bg-secondary/80"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <MapPin className="w-3 h-3 text-primary/70 shrink-0" />
+                                <span>{cityName}</span>
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">Maroc</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Delivery Address */}

@@ -183,3 +183,55 @@
 .animate-badge-glow {
   animation: badgeGlow 3.5s ease-in-out infinite;
 }
+
+/* Luxury Toast Notification Keyframes & Enhancements */
+@keyframes toastSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(110%, 0, 0) scale(0.94);
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(-6px, 0, 0) scale(1.02);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes toastGlowPulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(216, 176, 67, 0.2);
+  }
+  50% {
+    box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.4), 0 0 25px rgba(216, 176, 67, 0.35);
+  }
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  animation: toastSlideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  border-radius: 1.1rem !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  border-left: 3.5px solid #22c55e !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  border-left: 3.5px solid #ef4444 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="info"],
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  border-left: 3.5px solid hsl(var(--primary)) !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast]:hover {
+  transform: translateY(-2px) scale(1.01) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
