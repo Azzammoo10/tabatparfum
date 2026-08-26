@@ -9,6 +9,28 @@ export type EnrichedCustomer = Customer & {
   average_basket?: number;
 };
 
+const getHiddenCustomerKeys = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem("tabat_hidden_customers");
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {
+    // ignore
+  }
+  return new Set();
+};
+
+const saveHiddenCustomerKey = (keys: string[]) => {
+  try {
+    const existing = getHiddenCustomerKeys();
+    keys.forEach((k) => {
+      if (k) existing.add(k.trim().toLowerCase());
+    });
+    localStorage.setItem("tabat_hidden_customers", JSON.stringify(Array.from(existing)));
+  } catch {
+    // ignore
+  }
+};
+
 export const useAdminCustomers = () => {
   const [customers, setCustomers] = useState<EnrichedCustomer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +40,8 @@ export const useAdminCustomers = () => {
     setLoading(true);
     setError(null);
     try {
+      const hidden = getHiddenCustomerKeys();
+
       // 1. Fetch customers table
       const { data: dbCustomers, error: custErr } = await supabase
         .from("customers")
@@ -36,8 +60,11 @@ export const useAdminCustomers = () => {
       // Populate from customers table
       if (!custErr && dbCustomers) {
         dbCustomers.forEach((c) => {
-          const key = (c.phone ? c.phone.replace(/[^0-9]/g, "") : "") || c.email?.toLowerCase() || c.name?.toLowerCase();
-          if (key) {
+          const rawPhone = c.phone ? c.phone.replace(/[^0-9]/g, "") : "";
+          const key = rawPhone || c.email?.toLowerCase() || c.name?.toLowerCase();
+          
+          // Check if hidden/deleted
+          if (key && !hidden.has(key) && !hidden.has(c.id) && !(c.phone && hidden.has(c.phone.toLowerCase())) && !(c.name && hidden.has(c.name.toLowerCase()))) {
             customersMap.set(key, {
               ...c,
               total_orders: Number(c.total_orders || 0),
@@ -50,10 +77,15 @@ export const useAdminCustomers = () => {
 
       // Aggregate from all orders (even express checkout orders that didn't create a customer row yet)
       ordersList.forEach((ord) => {
-        const phoneKey = ord.customer_phone ? ord.customer_phone.replace(/[^0-9]/g, "") : "";
+        const rawPhone = ord.customer_phone ? ord.customer_phone.replace(/[^0-9]/g, "") : "";
         const emailKey = ord.customer_email && !ord.customer_email.endsWith("@client.tabat.ma") ? ord.customer_email.toLowerCase() : "";
         const nameKey = ord.customer_name?.trim().toLowerCase() || "client";
-        const key = phoneKey || emailKey || nameKey;
+        const key = rawPhone || emailKey || nameKey;
+
+        // Skip if customer was deleted by admin
+        if (hidden.has(key) || (ord.customer_phone && hidden.has(ord.customer_phone.toLowerCase())) || (ord.customer_name && hidden.has(ord.customer_name.toLowerCase())) || (rawPhone && hidden.has(rawPhone))) {
+          return;
+        }
 
         const existing = customersMap.get(key);
         const orderAmount = Number(ord.total_amount || 0);
@@ -63,7 +95,6 @@ export const useAdminCustomers = () => {
           if (!existing.orders.some((o) => o.id === ord.id)) {
             existing.orders.push(ord);
           }
-          // Update address or phone if richer in order
           if (!existing.phone && ord.customer_phone) existing.phone = ord.customer_phone;
           if (!existing.address && ord.customer_address) existing.address = ord.customer_address;
           if (!existing.name && ord.customer_name) existing.name = ord.customer_name;
@@ -134,11 +165,42 @@ export const useAdminCustomers = () => {
     return { ok: true };
   };
 
-  const deleteCustomer = async (id: string) => {
-    if (!id.startsWith("cust_")) {
-      const { error: err } = await supabase.from("customers").delete().eq("id", id);
-      if (err) return { error: err.message };
+  const deleteCustomer = async (cust: EnrichedCustomer | string) => {
+    const customerObj = typeof cust === "string" ? customers.find((c) => c.id === cust) : cust;
+    const customerId = typeof cust === "string" ? cust : cust.id;
+
+    // Collect keys to blacklist locally
+    const keysToBlacklist: string[] = [customerId];
+    if (customerObj) {
+      if (customerObj.id) keysToBlacklist.push(customerObj.id);
+      if (customerObj.name) keysToBlacklist.push(customerObj.name.toLowerCase());
+      if (customerObj.phone) {
+        keysToBlacklist.push(customerObj.phone.toLowerCase());
+        keysToBlacklist.push(customerObj.phone.replace(/[^0-9]/g, ""));
+      }
+      if (customerObj.email) keysToBlacklist.push(customerObj.email.toLowerCase());
     }
+
+    saveHiddenCustomerKey(keysToBlacklist);
+
+    // Instant local state optimistic removal
+    setCustomers((prev) => prev.filter((c) => c.id !== customerId && (customerObj ? c.name !== customerObj.name : true)));
+
+    // Try deleting from database if exists in `customers` table
+    try {
+      if (!customerId.startsWith("cust_")) {
+        await supabase.from("customers").delete().eq("id", customerId);
+      }
+      if (customerObj?.phone) {
+        await supabase.from("customers").delete().eq("phone", customerObj.phone);
+      }
+      if (customerObj?.name) {
+        await supabase.from("customers").delete().eq("name", customerObj.name);
+      }
+    } catch (e) {
+      console.warn("Could not delete from Supabase customers table:", e);
+    }
+
     await load();
     return { ok: true };
   };

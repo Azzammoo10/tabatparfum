@@ -138,7 +138,7 @@ const Clients = () => {
 
   const confirmDelete = async () => {
     if (!deletingCustomer) return;
-    const res = await deleteCustomer(deletingCustomer.id);
+    const res = await deleteCustomer(deletingCustomer);
     if (res.error) {
       toast.error("Erreur lors de la suppression : " + res.error);
     } else {
