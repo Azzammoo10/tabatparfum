@@ -15,11 +15,6 @@ const sizes = [
     desc: "Le format parfait pour vous accompagner partout — sac, valise, vestiaire — sans contrainte.",
     apps: "≈ 90 à 110 vaporisations",
   },
-  {
-    label: "20 ml — Signature",
-    desc: "Pour adopter durablement un parfum comme votre signature olfactive.",
-    apps: "≈ 180 à 220 vaporisations",
-  },
 ];
 
 const GuideDesTailles = () => {
@@ -31,10 +26,10 @@ const GuideDesTailles = () => {
         <main className="w-full lg:w-[70vw] lg:ml-auto px-6">
           <PageHeader
             title="Guide des Décants"
-            subtitle="Trois formats pensés pour chaque moment de votre vie."
+            subtitle="Deux formats pensés pour chaque moment de votre vie."
           />
           <ContentSection>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 gap-8">
               {sizes.map((s) => (
                 <div key={s.label} className="border border-border p-6 space-y-3">
                   <h3 className="font-serif text-2xl text-primary">{s.label}</h3>

@@ -22,7 +22,6 @@ export type FlaconStats = {
 const LABELS: Record<Size, string> = {
   "5ml": "Flacons 5ml",
   "10ml": "Flacons 10ml",
-  "20ml": "Flacons 20ml",
   full: "Bouteilles complètes",
 };
 
@@ -32,14 +31,13 @@ const normalizeSize = (rawSize?: string): Size | null => {
   const s = rawSize.toLowerCase().replace(/\s+/g, "");
   if (s.includes("5ml")) return "5ml";
   if (s.includes("10ml")) return "10ml";
-  if (s.includes("20ml")) return "20ml";
   if (s.includes("full") || s.includes("bouteille")) return "full";
   return null;
 };
 
 export const useFlaconnage = () => {
   const [rows, setRows] = useState<FlaconRow[]>([]);
-  const [used, setUsed] = useState<Record<Size, number>>({ "5ml": 0, "10ml": 0, "20ml": 0, full: 0 });
+  const [used, setUsed] = useState<Record<Size, number>>({ "5ml": 0, "10ml": 0, full: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +52,7 @@ export const useFlaconnage = () => {
       if (flaconRes.error) throw flaconRes.error;
       if (ordersRes.error) throw ordersRes.error;
 
-      const acc: Record<Size, number> = { "5ml": 0, "10ml": 0, "20ml": 0, full: 0 };
+      const acc: Record<Size, number> = { "5ml": 0, "10ml": 0, full: 0 };
       (ordersRes.data ?? []).forEach((o) => {
         const items = (o.items ?? []) as OrderItem[];
         items.forEach((it) => {

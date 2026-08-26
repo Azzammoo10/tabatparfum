@@ -1,6 +1,6 @@
 export type Gender = "Homme" | "Femme" | "Mixte";
 export type OrderStatus = "en_attente" | "confirmee" | "livree" | "annulee";
-export type Size = "5ml" | "10ml" | "20ml" | "full";
+export type Size = "5ml" | "10ml" | "full";
 export type StockStatus = "actif" | "rupture";
 export type SaleMode = "decant" | "full_bottle";
 
@@ -18,7 +18,7 @@ export type Parfum = {
   notes_fond: string[];
   price_5ml: number;
   price_10ml: number;
-  price_20ml: number;
+  price_20ml?: number;
   image_label: string;
   image_url: string | null;
   is_active: boolean;
@@ -31,6 +31,8 @@ export type Parfum = {
   full_bottle_price?: number | null;
   full_bottle_stock?: number | null;
   full_bottle_limited?: boolean | null;
+  stock_5ml?: number;
+  stock_10ml?: number;
   created_at: string;
   updated_at: string;
 };

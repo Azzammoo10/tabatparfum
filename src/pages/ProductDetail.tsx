@@ -45,7 +45,7 @@ const ParfumDetail = () => {
 
     const sizes: Size[] = isFull
       ? ["full"]
-      : (["5ml", "10ml", "20ml"] as Size[]).filter((s) => {
+      : (["5ml", "10ml"] as Size[]).filter((s) => {
           const p = priceFor(parfum, s);
           return typeof p === "number" && !isNaN(p) && p > 0;
         });
@@ -72,15 +72,17 @@ const ParfumDetail = () => {
     setQuantities((prev) => {
       const current = prev[s] ?? 0;
       const next = Math.max(0, current + delta);
+      if (delta > 0) {
+        // Switch active format exclusively when adding quantity
+        return { [s]: next };
+      }
       return { ...prev, [s]: next };
     });
   };
 
   const setDirectSizeQty = (s: Size, qty: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [s]: Math.max(0, qty),
-    }));
+    // Switch selection exclusively to selected format
+    setQuantities({ [s]: Math.max(0, qty) });
   };
 
   if (loading) {
@@ -126,7 +128,7 @@ const ParfumDetail = () => {
   // STRICTEMENT n'afficher que les formats ayant un prix > 0 configuré en base de données
   const availableSizes: Size[] = isFullBottle
     ? ["full"]
-    : (["5ml", "10ml", "20ml"] as Size[]).filter((s) => {
+    : (["5ml", "10ml"] as Size[]).filter((s) => {
         const p = priceFor(parfum, s);
         return typeof p === "number" && !isNaN(p) && p > 0;
       });
@@ -367,7 +369,7 @@ const ParfumDetail = () => {
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="grid grid-cols-2 gap-2.5">
                   {availableSizes.map((s) => {
                     const formatLabel =
                       s === "full"
@@ -387,10 +389,10 @@ const ParfumDetail = () => {
                       s === "full"
                         ? (parfum.full_bottle_stock ?? 0)
                         : s === "5ml"
-                        ? (parfum.stock_5ml ?? 99)
+                        ? (parfum.stock_5ml ?? 0)
                         : s === "10ml"
-                        ? (parfum.stock_10ml ?? 99)
-                        : 99;
+                        ? (parfum.stock_10ml ?? 0)
+                        : 0;
 
                     const isFormatOutOfStock = outOfStock || (typeof formatStock === "number" && formatStock <= 0);
 
@@ -413,7 +415,7 @@ const ParfumDetail = () => {
                         <div
                           className={`flex-1 select-none ${isFormatOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                           onClick={() => {
-                            if (!isFormatOutOfStock && qty === 0) setDirectSizeQty(s, 1);
+                            if (!isFormatOutOfStock) setDirectSizeQty(s, 1);
                           }}
                         >
                           <div className="flex items-center gap-2">

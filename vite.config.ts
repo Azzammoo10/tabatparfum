@@ -12,18 +12,26 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {
     chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-pdf": ["jspdf", "jspdf-autotable"],
-          "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-ui": ["lucide-react"],
+        manualChunks(id) {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router-dom/")) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/jspdf") || id.includes("node_modules/jspdf-autotable")) {
+            return "vendor-pdf";
+          }
+          if (id.includes("node_modules/@supabase")) {
+            return "vendor-supabase";
+          }
+          if (id.includes("node_modules/lucide-react")) {
+            return "vendor-ui";
+          }
         },
       },
     },

@@ -3,6 +3,7 @@ import { useAdminOrders } from "@/hooks/useAdminOrders";
 import { ORDER_STATUS_LABEL, type OrderStatus, type OrderItem, type Order } from "@/types/database";
 import { toast } from "sonner";
 import {
+  LucideIcon,
   FileDown,
   MessageCircle,
   Trash2,
@@ -45,7 +46,7 @@ const STATUS_STYLE: Record<OrderStatus, string> = {
   annulee: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30",
 };
 
-const STATUS_ICONS: Record<OrderStatus, any> = {
+const STATUS_ICONS: Record<OrderStatus, LucideIcon> = {
   en_attente: Clock,
   confirmee: Package,
   livree: CheckCircle2,
@@ -69,7 +70,7 @@ const summarizeItems = (items: OrderItem[]) =>
   items
     .map(
       (it) =>
-        `${it.parfum_name || (it as OrderItem & { name?: string }).name || "Produit"} (${it.size}) × ${it.quantity}`
+        `${it.parfum_name || it.name || "Produit"} (${it.size}) × ${it.quantity}`
     )
     .join(", ");
 
@@ -118,7 +119,7 @@ const Commandes = () => {
         const matchEmail = o.customer_email?.toLowerCase().includes(q);
         const matchAddress = o.customer_address?.toLowerCase().includes(q);
         const matchItems = o.items.some((it) =>
-          (it.parfum_name || (it as any).name || "").toLowerCase().includes(q)
+          (it.parfum_name || (it as OrderItem & { name?: string }).name || "").toLowerCase().includes(q)
         );
         if (!matchNum && !matchName && !matchPhone && !matchEmail && !matchAddress && !matchItems) {
           return false;
@@ -488,7 +489,7 @@ const Commandes = () => {
 
                 <div className="divide-y divide-border">
                   {viewingOrder.items.map((it, idx) => {
-                    const itemName = it.parfum_name || (it as any).name || "Parfum";
+                    const itemName = it.parfum_name || it.name || "Parfum";
                     const unitPrice = Number(it.price || 0);
                     const qty = Number(it.quantity || 1);
                     const subtotal = Number(it.subtotal || unitPrice * qty);

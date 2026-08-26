@@ -89,26 +89,24 @@ const Checkout = () => {
     lines.push("*ARTICLES SÉLECTIONNÉS :*");
     items.forEach((item) => {
       lines.push(
-        `• ${item.maison} — ${item.name} (${SIZE_META[item.size]?.label || item.size}) ×${item.quantity} = ${formatMAD(
-          item.price * item.quantity
-        )}`
+        `• ${item.maison} — ${item.name} (${SIZE_META[item.size]?.label || item.size}) ×${item.quantity}`
       );
     });
     lines.push("");
     lines.push("*COORDONNÉES CLIENT :*");
     lines.push(`• *Nom & Prénom* : ${fullName.trim()}`);
     lines.push(`• *Téléphone* : ${phone.trim()}`);
-    lines.push(`• *Adresse* : ${address.trim()}, ${city}`);
+    lines.push(`• *Ville* : ${city.trim()}`);
+    lines.push(`• *Adresse de Livraison* : ${address.trim()}`);
     if (notes.trim()) {
       lines.push(`• *Note* : ${notes.trim()}`);
     }
     lines.push("");
-    lines.push("*TOTAL & LIVRAISON :*");
-    lines.push(`• *Total à Payer* : *${formatMAD(total)}*`);
-    lines.push(`• *Livraison* : Gratuite partout au Maroc (24–48h)`);
-    lines.push(`• *Paiement* : Espèces à la livraison (COD)`);
+    lines.push("*LIVRAISON & PAIEMENT :*");
+    lines.push(`• *Mode de paiement* : Espèces à la livraison (COD)`);
+    lines.push(`• *Total & Frais de Livraison* : À confirmer par le vendeur selon votre ville (${city.trim()})`);
     lines.push("═════════════════════════");
-    lines.push("Merci de me confirmer la préparation et l'expédition de mon colis.");
+    lines.push("Merci de me confirmer le montant total avec la livraison.");
     return encodeURIComponent(lines.join("\n"));
   };
 
@@ -133,7 +131,7 @@ const Checkout = () => {
       customer_phone: phone.trim(),
       customer_address: fullAddressText,
       total_amount: total,
-      status: "en_attente",
+      status: "en_attente" as const,
       items: items.map((item) => ({
         name: `${item.maison} — ${item.name}`,
         size: SIZE_META[item.size]?.label || item.size,
@@ -143,7 +141,10 @@ const Checkout = () => {
     };
 
     try {
-      await supabase.from("orders").insert([orderPayload]);
+      const { error: dbError } = await supabase.from("orders").insert([orderPayload]);
+      if (dbError) {
+        console.error("Erreur enregistrement commande Supabase:", dbError);
+      }
     } catch (err) {
       console.warn("Supabase order recording note:", err);
     }
@@ -572,18 +573,23 @@ const Checkout = () => {
                   {/* Pricing details */}
                   <div className="border-t border-border/60 pt-4 space-y-2 text-xs">
                     <div className="flex justify-between text-muted-foreground font-light">
-                      <span>Sous-total</span>
+                      <span>Sous-total articles</span>
                       <span className="font-serif font-medium text-foreground">{formatMAD(subtotal)}</span>
                     </div>
 
                     <div className="flex justify-between text-muted-foreground font-light">
-                      <span>Livraison Express Maroc</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">Gratuite</span>
+                      <span>Livraison</span>
+                      <span className="font-medium text-primary text-[11px]">Selon tarif par ville</span>
                     </div>
 
-                    <div className="flex justify-between text-base font-bold border-t border-border/60 pt-3 mt-2">
-                      <span className="text-foreground">Total à Payer</span>
-                      <span className="text-primary font-serif">{formatMAD(total)}</span>
+                    <div className="border-t border-border/60 pt-3 mt-2 space-y-1">
+                      <div className="flex justify-between text-xs font-bold text-foreground">
+                        <span>Sous-total Panier</span>
+                        <span className="text-primary font-serif">{formatMAD(subtotal)}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">
+                        * Le total final (avec frais de livraison) vous sera confirmé sur WhatsApp selon votre ville.
+                      </p>
                     </div>
                   </div>
 

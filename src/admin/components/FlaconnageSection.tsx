@@ -136,11 +136,9 @@ const FlaconnageSection = () => {
         <p className="text-sm text-muted-foreground py-6">Chargement…</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {stats
-            .filter((s) => s.size !== "20ml")
-            .map((s) => (
-              <Row key={s.size} s={s} onSave={onSave(s.size)} />
-            ))}
+          {stats.map((s) => (
+            <Row key={s.size} s={s} onSave={onSave(s.size)} />
+          ))}
         </div>
       )}
     </section>

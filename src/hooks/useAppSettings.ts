@@ -10,9 +10,6 @@ export type AppSettings = {
   bot_name: string;
   bot_welcome: string;
   store_name: string;
-  store_email: string;
-  store_phone: string;
-  store_address: string;
 };
 
 const DEFAULTS: AppSettings = {
@@ -24,9 +21,6 @@ const DEFAULTS: AppSettings = {
   bot_name: "Assistante TABAT",
   bot_welcome: "Bonjour 👋 Bienvenue chez TABAT. Comment puis-je vous aider aujourd'hui ?",
   store_name: "TABAT",
-  store_email: "",
-  store_phone: "+212 752-850156",
-  store_address: "Casablanca, Maroc",
 };
 
 const getLocalSettings = (): AppSettings => {
@@ -136,9 +130,10 @@ export const useAppSettings = () => {
 
     // Upsert into Supabase for persistence across devices
     try {
+      const { store_name, ...dbPayload } = patch;
       const { error } = await supabase
         .from("app_settings")
-        .upsert({ id: true, ...patch });
+        .upsert({ id: true, ...dbPayload });
 
       if (error) {
         console.error("Erreur mise a jour maintenance/settings Supabase:", error);

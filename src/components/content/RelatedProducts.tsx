@@ -64,11 +64,11 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {related.map((p) => {
             const isFull = p.sale_mode === "full_bottle";
+            const decantStock = (p.stock_5ml ?? 0) + (p.stock_10ml ?? 0);
             const outOfStock =
               !p.is_active ||
               p.stock_status === "rupture" ||
-              (isFull && typeof p.full_bottle_stock === "number" && p.full_bottle_stock <= 0) ||
-              (!isFull && typeof p.stock_5ml === "number" && typeof p.stock_10ml === "number" && p.stock_5ml <= 0 && p.stock_10ml <= 0);
+              (isFull ? (p.full_bottle_stock ?? 0) <= 0 : decantStock <= 0);
 
             return (
               <Link

@@ -35,7 +35,7 @@ const Footer = () => {
               Haute Parfumerie & Décantation
             </p>
             <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed max-w-sm">
-              Sélection rigoureuse des plus grandes maisons de parfum. Flacons originaux et échantillons décantés de 5ml à 20ml livrés partout au Maroc.
+              Sélection rigoureuse des plus grandes maisons de parfum. Flacons originaux et échantillons décantés de 5ml à 10ml livrés partout au Maroc.
             </p>
             <div className="pt-1">
               <a

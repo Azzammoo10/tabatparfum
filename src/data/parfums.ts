@@ -1,7 +1,7 @@
 export type Gender = 'Homme' | 'Femme' | 'Mixte';
 export type CollectionCategory = 'homme' | 'femme' | 'deodorants-stick' | 'packs';
 
-export type ParfumSize = '5ml' | '10ml' | '20ml' | 'full';
+export type ParfumSize = '5ml' | '10ml' | 'full';
 
 export type Parfum = {
   id: string;
@@ -11,7 +11,7 @@ export type Parfum = {
   category?: CollectionCategory;
   description: string;
   notes: { tete: string[]; coeur: string[]; fond: string[] };
-  prices: { '5ml': number; '10ml': number; '20ml': number };
+  prices: { '5ml': number; '10ml': number; '20ml'?: number };
   imageLabel: string;
   image_url?: string | null;
   isNew?: boolean;
@@ -23,7 +23,6 @@ export type Parfum = {
 export const SIZE_META: Record<ParfumSize, { label: string; sub: string }> = {
   '5ml':  { label: '5 ml',  sub: 'Découverte' },
   '10ml': { label: '10 ml', sub: 'Voyage' },
-  '20ml': { label: '20 ml', sub: 'Signature' },
   'full': { label: 'Bouteille complète', sub: 'Flacon scellé' },
 };
 

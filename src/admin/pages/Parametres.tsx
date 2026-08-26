@@ -40,9 +40,7 @@ const Parametres = () => {
 
   // Store Info State
   const [storeName, setStoreName] = useState(settings.store_name || "TABAT");
-  const [storeEmail, setStoreEmail] = useState(settings.store_email || "");
-  const [storePhone, setStorePhone] = useState(settings.store_phone || "+212 752-850156");
-  const [storeAddress, setStoreAddress] = useState(settings.store_address || "Casablanca, Maroc");
+  const [storePhone, setStorePhone] = useState(settings.whatsapp_phone || "212752850156");
   const [savingStore, setSavingStore] = useState(false);
 
   // Admin Account State
@@ -62,9 +60,7 @@ const Parametres = () => {
 
   useEffect(() => {
     setStoreName(settings.store_name || "TABAT");
-    setStoreEmail(settings.store_email || "");
-    setStorePhone(settings.store_phone || "+212 752-850156");
-    setStoreAddress(settings.store_address || "Casablanca, Maroc");
+    setStorePhone(settings.whatsapp_phone || "212752850156");
 
     setMaintMode(settings.maintenance_mode);
     setMaintMessage(settings.maintenance_message);
@@ -84,9 +80,7 @@ const Parametres = () => {
     setSavingStore(true);
     const { error } = await update({
       store_name: storeName,
-      store_email: storeEmail,
-      store_phone: storePhone,
-      store_address: storeAddress,
+      whatsapp_phone: storePhone,
     });
     setSavingStore(false);
     if (error) toast.error("Erreur de sauvegarde: " + error.message);
@@ -127,7 +121,7 @@ const Parametres = () => {
       whatsapp_phone: waPhone,
     });
     if (error) {
-      toast.error("Erreur: " + (error as any).message);
+      toast.error("Erreur: " + error.message);
     } else {
       toast.success(nextMode ? "Mode maintenance activé (Site client bloqué)" : "Mode maintenance désactivé (Boutique accessible)");
     }
@@ -142,7 +136,7 @@ const Parametres = () => {
       whatsapp_phone: waPhone,
     });
     setSavingMaint(false);
-    if (error) toast.error("Erreur: " + (error as any).message);
+    if (error) toast.error("Erreur: " + error.message);
     else toast.success("Paramètres de maintenance enregistrés");
   };
 
@@ -158,28 +152,11 @@ const Parametres = () => {
           />
         </div>
         <div>
-          <label className={labelCls}>Email de contact</label>
-          <input
-            type="email"
-            className={inputCls}
-            value={storeEmail}
-            onChange={(e) => setStoreEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Téléphone</label>
+          <label className={labelCls}>Téléphone (WhatsApp)</label>
           <input
             className={inputCls}
             value={storePhone}
             onChange={(e) => setStorePhone(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Adresse</label>
-          <input
-            className={inputCls}
-            value={storeAddress}
-            onChange={(e) => setStoreAddress(e.target.value)}
           />
         </div>
       </Card>

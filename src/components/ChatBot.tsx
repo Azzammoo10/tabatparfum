@@ -36,8 +36,8 @@ const DEFAULT_QAS: QA[] = [
   },
   {
     id: "qa-3",
-    question: "📏 Comment choisir le format (5ml, 10ml, 20ml) ?",
-    answer: "• 5ml (~75 sprays) : Parfait pour tester et voyager.\n• 10ml (~150 sprays) : 3 à 4 semaines d'utilisation quotidienne.\n• 20ml (~300 sprays) : Format économique pour vos parfums favoris.",
+    question: "📏 Comment choisir le format (5ml, 10ml) ?",
+    answer: "• 5ml (~75 sprays) : Parfait pour tester et voyager.\n• 10ml (~150 sprays) : 3 à 4 semaines d'utilisation quotidienne.",
   },
   {
     id: "qa-4",

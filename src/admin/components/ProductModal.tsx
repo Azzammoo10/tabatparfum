@@ -110,17 +110,6 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
           },
         ];
 
-        if (Number(initial.prices?.["20ml"]) > 0) {
-          initialFormats.push({
-            id: "20ml",
-            ml: 20,
-            label: "Format Signature",
-            price: String(initial.prices["20ml"]),
-            stock: "10",
-            isDefault: false,
-          });
-        }
-
         setFormats(initialFormats);
       } else {
         setF(emptyForm);
@@ -379,7 +368,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                   <Droplet className="w-4 h-4 text-[#C9A96E]" />
                   <span className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">Décants / Échantillons</span>
                 </div>
-                <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Vente au format fractionné : 5 ml, 10 ml, 20 ml, etc.</p>
+                <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Vente au format fractionné : 5 ml, 10 ml.</p>
               </button>
 
               <button

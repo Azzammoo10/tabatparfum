@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatMAD } from "@/lib/sizes";
 import { toast } from "sonner";
-import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag, AlertCircle, Bell } from "lucide-react";
+import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag, AlertCircle, Bell, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { POPULAR_CITIES, searchMoroccanCities } from "@/data/moroccanCities";
 
 export interface OrderSelectionItem {
   size: string;
@@ -40,9 +41,25 @@ const ExpressOrderForm = ({
 }: ExpressOrderFormProps) => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("Casablanca");
+  const [cityQuery, setCityQuery] = useState("Casablanca");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const cityWrapperRef = useRef<HTMLDivElement>(null);
   const [address, setAddress] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cityWrapperRef.current && !cityWrapperRef.current.contains(event.target as Node)) {
+        setShowCityDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const matchingCities = searchMoroccanCities(cityQuery, 8);
 
   // Normalize selected items list
   const activeItems: OrderSelectionItem[] = items && items.length > 0
@@ -81,6 +98,10 @@ const ExpressOrderForm = ({
       toast.error("Veuillez saisir votre numéro de téléphone");
       return;
     }
+    if (!city.trim()) {
+      toast.error("Veuillez sélectionner votre ville");
+      return;
+    }
     if (!address.trim()) {
       toast.error("Veuillez saisir votre adresse de livraison");
       return;
@@ -92,6 +113,7 @@ const ExpressOrderForm = ({
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
     const orderNumber = `TAB-${randomSuffix}`;
     const cleanEmail = `${fullName.trim().toLowerCase().replace(/[^a-z0-9]/g, "") || "client"}@client.tabat.ma`;
+    const fullAddressText = `${address.trim()}, ${city.trim()}, Maroc`;
 
     // Save order record directly to Supabase database for /admin/commandes visibility
     try {
@@ -101,7 +123,7 @@ const ExpressOrderForm = ({
           customer_name: fullName.trim(),
           customer_email: cleanEmail,
           customer_phone: phone.trim(),
-          customer_address: address.trim(),
+          customer_address: fullAddressText,
           total_amount: totalPrice,
           status: "en_attente",
           items: activeItems.map((it) => ({
@@ -125,7 +147,7 @@ const ExpressOrderForm = ({
 
     // Build personalized luxury WhatsApp message
     const formattedItemsLines = activeItems
-      .map((it) => `  ▫️ *${it.sizeLabel}* × ${it.quantity} (${formatMAD(it.subtotal)})`)
+      .map((it) => `  ▫️ *${it.sizeLabel}* × ${it.quantity}`)
       .join("\n");
 
     const message = [
@@ -137,17 +159,18 @@ const ExpressOrderForm = ({
       `• *Parfum* : ${parfumName}`,
       `• *Formats & Quantités* :`,
       formattedItemsLines,
-      `• *Total à Payer* : ${formatMAD(totalPrice)}`,
       "",
       "*INFORMATIONS DE LIVRAISON*",
       `• *Nom & Prénom* : ${fullName.trim()}`,
       `• *Téléphone* : ${phone.trim()}`,
-      `• *Adresse* : ${address.trim()}`,
+      `• *Ville* : ${city.trim()}`,
+      `• *Adresse de Livraison* : ${address.trim()}`,
       "",
-      "*PAIEMENT*",
-      "• Espèces à la livraison (COD)",
+      "*PAIEMENT & TOTAL*",
+      "• Paiement à la livraison (COD)",
+      `*(Le montant total avec les frais de livraison pour ${city.trim()} vous sera confirmé par le vendeur)*`,
       "═══════════════════════",
-      "Merci de confirmer ma commande TABAT !",
+      "Merci de me confirmer ma commande !",
     ].join("\n");
 
     const encoded = encodeURIComponent(message);
@@ -307,20 +330,105 @@ const ExpressOrderForm = ({
           />
         </div>
 
-        {/* Field 3: Adresse de Livraison */}
+        {/* Field 3: Ville de Destination */}
+        <div className="space-y-1 relative" ref={cityWrapperRef}>
+          <Label
+            htmlFor="city"
+            className="text-[10px] sm:text-[11px] font-medium text-foreground/90 flex items-center justify-between"
+          >
+            <span className="flex items-center gap-1">
+              <Building2 className="w-3 h-3 text-primary shrink-0" />
+              <span>Ville de Destination *</span>
+            </span>
+          </Label>
+
+          {/* Quick city badges */}
+          <div className="flex flex-wrap gap-1 pb-1">
+            {POPULAR_CITIES.slice(0, 6).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setCity(c);
+                  setCityQuery(c);
+                  setShowCityDropdown(false);
+                }}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${
+                  city.toLowerCase() === c.toLowerCase()
+                    ? "bg-primary text-primary-foreground font-semibold"
+                    : "bg-secondary/70 text-muted-foreground hover:text-foreground border border-border/50"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative">
+            <Input
+              id="city"
+              type="text"
+              required
+              placeholder="Ex: Casablanca, Rabat, Marrakech..."
+              value={cityQuery}
+              onFocus={() => {
+                setFocusedField("city");
+                setShowCityDropdown(true);
+              }}
+              onBlur={() => setFocusedField(null)}
+              onChange={(e) => {
+                setCityQuery(e.target.value);
+                setCity(e.target.value);
+                setShowCityDropdown(true);
+              }}
+              className={`h-9.5 text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
+                focusedField === "city" ? "border-primary ring-2 ring-primary/20" : ""
+              }`}
+            />
+          </div>
+
+          {/* City Dropdown */}
+          {showCityDropdown && matchingCities.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-xl z-50 p-1 max-h-40 overflow-y-auto space-y-0.5">
+              {matchingCities.map((cityName) => (
+                <button
+                  key={cityName}
+                  type="button"
+                  onClick={() => {
+                    setCity(cityName);
+                    setCityQuery(cityName);
+                    setShowCityDropdown(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                    city.toLowerCase() === cityName.toLowerCase()
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-3 h-3 text-primary/70 shrink-0" />
+                    <span>{cityName}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Field 4: Adresse de Livraison Précise */}
         <div className="space-y-1">
           <Label
             htmlFor="address"
             className="text-[10px] sm:text-[11px] font-medium text-foreground/90 flex items-center gap-1"
           >
             <MapPin className="w-3 h-3 text-primary shrink-0" />
-            <span>Adresse de Livraison</span>
+            <span>Adresse de Livraison Précise *</span>
           </Label>
           <Input
             id="address"
             type="text"
             required
-            placeholder="Ex: N° 12, Rue Atlas, Casablanca"
+            placeholder="Quartier, Rue, N° Immeuble / Résidence..."
             value={address}
             onFocus={() => setFocusedField("address")}
             onBlur={() => setFocusedField(null)}
