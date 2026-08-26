@@ -6,6 +6,10 @@ import { useAppSettings } from "@/hooks/useAppSettings";
 type QA = { id: string; question: string; answer: string };
 type Msg = { id: string; from: "bot" | "user"; text: string };
 
+const WHATSAPP_PHONE = "212752850156";
+const WHATSAPP_MSG = "Bonjour TABAT, je souhaite avoir des informations sur vos parfums et passer commande.";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MSG)}`;
+
 const uid = () => Math.random().toString(36).slice(2);
 
 const WhatsAppIcon = ({ className = "w-7 h-7" }: { className?: string }) => (
@@ -92,51 +96,54 @@ const ChatBot = () => {
   };
 
   const contactWhatsapp = () => {
-    window.open("https://wa.me/212752850156", "_blank");
+    window.open(WHATSAPP_LINK, "_blank");
   };
 
   return (
     <>
-      {/* Floating Instagram Launcher Button (Positioned above WhatsApp & ChatBot) */}
-      <a
-        href="https://www.instagram.com/tabatperfumes"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Suivez-nous sur Instagram"
-        className="fixed bottom-[9.25rem] right-5 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-        title="Suivez-nous sur Instagram (@tabatperfumes)"
-      >
-        <span className="absolute inset-0 rounded-full bg-[#dc2743]/30 animate-pulse" />
-        <Instagram className="w-7 h-7 relative" />
-      </a>
+      {/* Floating Action Buttons Stack (Instagram -> WhatsApp -> ChatBot) */}
+      <div className="fixed bottom-5 right-5 z-[60] flex flex-col-reverse items-center gap-3 pointer-events-auto">
+        {/* 1. ChatBot launcher button (En bas) */}
+        {settings.bot_enabled && (
+          <button
+            type="button"
+            aria-label={open ? "Fermer le chat" : "Ouvrir le chat"}
+            onClick={() => setOpen((v) => !v)}
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-[#C9A96E] to-[#a0824b] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
+          >
+            <span className={`absolute inset-0 rounded-full bg-[#C9A96E]/40 pointer-events-none ${open ? "" : "animate-ping"}`} />
+            <span className="relative z-10">
+              {open ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
+            </span>
+          </button>
+        )}
 
-      {/* Floating WhatsApp Launcher Button (Positioned directly above ChatBot) */}
-      <a
-        href="https://wa.me/212752850156"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Discuter sur WhatsApp"
-        className="fixed bottom-22 right-5 z-[60] w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-        title="Discuter sur WhatsApp (07 52 85 01 56)"
-      >
-        <span className="absolute inset-0 rounded-full bg-[#25D366]/40 animate-ping" />
-        <WhatsAppIcon className="w-7 h-7 relative" />
-      </a>
-
-      {/* Floating ChatBot launcher button */}
-      {settings.bot_enabled && (
-        <button
-          type="button"
-          aria-label={open ? "Fermer le chat" : "Ouvrir le chat"}
-          onClick={() => setOpen((v) => !v)}
-          className="fixed bottom-5 right-5 z-[60] w-14 h-14 rounded-full bg-gradient-to-br from-[#C9A96E] to-[#a0824b] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+        {/* 2. WhatsApp Launcher Button (Au milieu) */}
+        <a
+          href={WHATSAPP_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Discuter sur WhatsApp"
+          className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
+          title="Discuter sur WhatsApp (+212 752-850156)"
         >
-          <span className={`absolute inset-0 rounded-full bg-[#C9A96E]/40 ${open ? "" : "animate-ping"}`} />
-          <span className="relative">
-            {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
-          </span>
-        </button>
-      )}
+          <span className="absolute inset-0 rounded-full bg-[#25D366]/40 animate-ping pointer-events-none" />
+          <WhatsAppIcon className="w-7 h-7 relative z-10 text-white" />
+        </a>
+
+        {/* 3. Instagram Launcher Button (En haut) */}
+        <a
+          href="https://www.instagram.com/tabatperfumes"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Suivez-nous sur Instagram"
+          className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
+          title="Suivez-nous sur Instagram (@tabatperfumes)"
+        >
+          <span className="absolute inset-0 rounded-full bg-[#dc2743]/30 animate-pulse pointer-events-none" />
+          <Instagram className="w-7 h-7 relative z-10 text-white" />
+        </a>
+      </div>
 
       {/* Chat window */}
       {settings.bot_enabled && open && (
