@@ -142,14 +142,6 @@ const Footer = () => {
                   <p className="text-xs">Règlement à la livraison</p>
                 </div>
               </div>
-
-              <div className="flex items-start gap-2.5">
-                <Mail className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground text-xs uppercase tracking-wider">Email</p>
-                  <p className="text-xs">contact@tabatperfume.com</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>

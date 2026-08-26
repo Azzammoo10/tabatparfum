@@ -40,13 +40,13 @@ const Parametres = () => {
 
   // Store Info State
   const [storeName, setStoreName] = useState(settings.store_name || "TABAT");
-  const [storeEmail, setStoreEmail] = useState(settings.store_email || "contact@tabatperfume.com");
-  const [storePhone, setStorePhone] = useState(settings.store_phone || "+212 6 63 84 80 99");
+  const [storeEmail, setStoreEmail] = useState(settings.store_email || "");
+  const [storePhone, setStorePhone] = useState(settings.store_phone || "+212 752-850156");
   const [storeAddress, setStoreAddress] = useState(settings.store_address || "Casablanca, Maroc");
   const [savingStore, setSavingStore] = useState(false);
 
   // Admin Account State
-  const [adminEmail, setAdminEmail] = useState("admin@tabatperfume.com");
+  const [adminEmail, setAdminEmail] = useState("admin@tabat.ma");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
   const [showAdminPassword, setShowAdminPassword] = useState(false);
@@ -57,19 +57,19 @@ const Parametres = () => {
   const [maintMode, setMaintMode] = useState(settings.maintenance_mode);
   const [maintMessage, setMaintMessage] = useState(settings.maintenance_message);
   const [igUrl, setIgUrl] = useState(settings.instagram_url);
-  const [waPhone, setWaPhone] = useState(settings.whatsapp_phone);
+  const [waPhone, setWaPhone] = useState(settings.whatsapp_phone || "212752850156");
   const [savingMaint, setSavingMaint] = useState(false);
 
   useEffect(() => {
     setStoreName(settings.store_name || "TABAT");
-    setStoreEmail(settings.store_email || "contact@tabatperfume.com");
-    setStorePhone(settings.store_phone || "+212 6 63 84 80 99");
+    setStoreEmail(settings.store_email || "");
+    setStorePhone(settings.store_phone || "+212 752-850156");
     setStoreAddress(settings.store_address || "Casablanca, Maroc");
 
     setMaintMode(settings.maintenance_mode);
     setMaintMessage(settings.maintenance_message);
     setIgUrl(settings.instagram_url);
-    setWaPhone(settings.whatsapp_phone);
+    setWaPhone(settings.whatsapp_phone || "212752850156");
   }, [settings]);
 
   useEffect(() => {
@@ -117,6 +117,22 @@ const Parametres = () => {
     }
   };
 
+  const toggleMaintenanceMode = async () => {
+    const nextMode = !maintMode;
+    setMaintMode(nextMode);
+    const { error } = await update({
+      maintenance_mode: nextMode,
+      maintenance_message: maintMessage,
+      instagram_url: igUrl,
+      whatsapp_phone: waPhone,
+    });
+    if (error) {
+      toast.error("Erreur: " + (error as any).message);
+    } else {
+      toast.success(nextMode ? "Mode maintenance activé (Site client bloqué)" : "Mode maintenance désactivé (Boutique accessible)");
+    }
+  };
+
   const saveMaintenance = async () => {
     setSavingMaint(true);
     const { error } = await update({
@@ -126,8 +142,8 @@ const Parametres = () => {
       whatsapp_phone: waPhone,
     });
     setSavingMaint(false);
-    if (error) toast.error("Erreur: " + error.message);
-    else toast.success(maintMode ? "Mode maintenance activé" : "Mode maintenance désactivé");
+    if (error) toast.error("Erreur: " + (error as any).message);
+    else toast.success("Paramètres de maintenance enregistrés");
   };
 
   return (
@@ -239,7 +255,7 @@ const Parametres = () => {
             type="button"
             role="switch"
             aria-checked={maintMode}
-            onClick={() => setMaintMode((v) => !v)}
+            onClick={toggleMaintenanceMode}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${maintMode ? "bg-[#C9A96E]" : "bg-[#E5E7EB] dark:bg-[#2A2A2A]"}`}
           >
             <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${maintMode ? "translate-x-5" : "translate-x-0.5"} translate-y-0.5`} />
@@ -270,7 +286,7 @@ const Parametres = () => {
               className={inputCls}
               value={waPhone}
               onChange={(e) => setWaPhone(e.target.value)}
-              placeholder="212600000000"
+              placeholder="212752850156"
             />
           </div>
         </div>

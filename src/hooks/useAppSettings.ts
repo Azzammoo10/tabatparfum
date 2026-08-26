@@ -18,23 +18,55 @@ export type AppSettings = {
 const DEFAULTS: AppSettings = {
   maintenance_mode: false,
   maintenance_message: "Nous améliorons votre expérience. Revenez très bientôt.",
-  instagram_url: "https://instagram.com/tabatperfume",
-  whatsapp_phone: "212663848099",
+  instagram_url: "https://instagram.com/tabatperfumes",
+  whatsapp_phone: "212752850156",
   bot_enabled: true,
   bot_name: "Assistante TABAT",
   bot_welcome: "Bonjour 👋 Bienvenue chez TABAT. Comment puis-je vous aider aujourd'hui ?",
   store_name: "TABAT",
-  store_email: "contact@tabatperfume.com",
-  store_phone: "+212 6 63 84 80 99",
+  store_email: "",
+  store_phone: "+212 752-850156",
   store_address: "Casablanca, Maroc",
 };
 
+const getLocalSettings = (): AppSettings => {
+  try {
+    const saved = localStorage.getItem("tabat_app_settings");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.store_email === "contact@tabatperfume.com") {
+        parsed.store_email = "";
+      }
+      if (parsed.store_phone && (parsed.store_phone.includes("6 63") || parsed.store_phone.includes("663848099") || parsed.store_phone.includes("600000000"))) {
+        parsed.store_phone = "+212 752-850156";
+      }
+      if (parsed.whatsapp_phone && (parsed.whatsapp_phone.includes("663848099") || parsed.whatsapp_phone.includes("600000000"))) {
+        parsed.whatsapp_phone = "212752850156";
+      }
+      return { ...DEFAULTS, ...parsed };
+    }
+  } catch {
+    // ignore
+  }
+  return DEFAULTS;
+};
+
 export const useAppSettings = () => {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULTS);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<AppSettings>(getLocalSettings);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
+
+    const handleLocalUpdate = () => {
+      if (active) {
+        setSettings(getLocalSettings());
+      }
+    };
+
+    window.addEventListener("tabat_settings_updated", handleLocalUpdate);
+    window.addEventListener("storage", handleLocalUpdate);
+
     const fetchSettings = async () => {
       try {
         const { data, error } = await supabase
@@ -48,7 +80,13 @@ export const useAppSettings = () => {
         }
 
         if (active && data) {
-          setSettings({ ...DEFAULTS, ...(data as Partial<AppSettings>) });
+          const merged = { ...DEFAULTS, ...getLocalSettings(), ...(data as Partial<AppSettings>) };
+          setSettings(merged);
+          try {
+            localStorage.setItem("tabat_app_settings", JSON.stringify(merged));
+          } catch {
+            // ignore
+          }
         }
       } catch (err) {
         console.warn("Exception fetching app_settings:", err);
@@ -66,7 +104,13 @@ export const useAppSettings = () => {
         { event: "*", schema: "public", table: "app_settings" },
         (payload) => {
           if (payload.new && active) {
-            setSettings((prev) => ({ ...prev, ...(payload.new as Partial<AppSettings>) }));
+            const next = { ...settings, ...(payload.new as Partial<AppSettings>) };
+            setSettings(next);
+            try {
+              localStorage.setItem("tabat_app_settings", JSON.stringify(next));
+            } catch {
+              // ignore
+            }
           }
         },
       )
@@ -74,22 +118,35 @@ export const useAppSettings = () => {
 
     return () => {
       active = false;
+      window.removeEventListener("tabat_settings_updated", handleLocalUpdate);
+      window.removeEventListener("storage", handleLocalUpdate);
       supabase.removeChannel(channel);
     };
   }, []);
 
   const update = async (patch: Partial<AppSettings>) => {
-    setSettings((s) => ({ ...s, ...patch }));
-
-    // Use upsert to guarantee creation if row id=true does not exist yet
-    const { error } = await supabase
-      .from("app_settings")
-      .upsert({ id: true, ...patch });
-
-    if (error) {
-      console.error("Erreur mise a jour maintenance/settings:", error);
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    try {
+      localStorage.setItem("tabat_app_settings", JSON.stringify(next));
+      window.dispatchEvent(new Event("tabat_settings_updated"));
+    } catch {
+      // ignore
     }
-    return { error };
+
+    // Upsert into Supabase for persistence across devices
+    try {
+      const { error } = await supabase
+        .from("app_settings")
+        .upsert({ id: true, ...patch });
+
+      if (error) {
+        console.error("Erreur mise a jour maintenance/settings Supabase:", error);
+      }
+      return { error };
+    } catch (err) {
+      return { error: err as Error };
+    }
   };
 
   return { settings, loading, update };

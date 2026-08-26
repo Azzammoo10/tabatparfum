@@ -18,7 +18,7 @@ const BRAND = {
 
 const BRAND_NAME = "TABAT";
 const BRAND_TAGLINE = "Maison de Haute Parfumerie & Décantation au Maroc";
-const BRAND_CONTACT = "www.tabatperfume.com  ·  +212 6 63 84 80 99";
+const BRAND_CONTACT = "www.tabatperfume.com  ·  +212 752-850156";
 
 const STATUS_LABEL: Record<string, string> = {
   en_attente: "En attente",

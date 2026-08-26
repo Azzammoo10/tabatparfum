@@ -221,7 +221,7 @@ export async function exportMonthlyFinancialReportPdf({
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...BRAND.muted);
-  doc.text("tabatperfume.com  ·  contact@tabatperfume.com  ·  +212 6 63 84 80 99", pageW / 2, fy + 28, { align: "center" });
+  doc.text("tabatperfume.com  ·  +212 7 52 85 01 56", pageW / 2, fy + 28, { align: "center" });
 
   doc.setFillColor(...BRAND.gold);
   doc.rect(0, pageH - 4, pageW, 4, "F");

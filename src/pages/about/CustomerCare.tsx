@@ -6,8 +6,8 @@ import AboutSidebar from "../../components/about/AboutSidebar";
 import { Button } from "@/components/ui/button";
 import { Instagram, MessageCircle } from "lucide-react";
 
-const WHATSAPP_NUMBER = "212600000000"; // format international
-const INSTAGRAM_HANDLE = "tabatperfume";
+const WHATSAPP_NUMBER = "212752850156"; // format international
+const INSTAGRAM_HANDLE = "tabatperfumes";
 
 const ServiceClient = () => {
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
@@ -28,8 +28,8 @@ const ServiceClient = () => {
           <ContentSection>
             <div className="grid md:grid-cols-2 gap-12 max-w-4xl">
               <div className="space-y-3">
-                <h3 className="font-serif text-xl text-primary">Email</h3>
-                <p className="text-foreground/75 font-light">contact@tabatperfume.com</p>
+                <h3 className="font-serif text-xl text-primary">Téléphone & WhatsApp</h3>
+                <p className="text-foreground/75 font-light">+212 752-850156</p>
               </div>
               <div className="space-y-3">
                 <h3 className="font-serif text-xl text-primary">Horaires</h3>

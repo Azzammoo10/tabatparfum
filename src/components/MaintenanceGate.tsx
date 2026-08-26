@@ -8,11 +8,11 @@ import Maintenance from "@/pages/Maintenance";
  */
 const MaintenanceGate = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { settings, loading } = useAppSettings();
+  const { settings } = useAppSettings();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
-  if (loading || isAdminRoute) return <>{children}</>;
+  if (isAdminRoute) return <>{children}</>;
   if (settings.maintenance_mode) return <Maintenance />;
   return <>{children}</>;
 };
