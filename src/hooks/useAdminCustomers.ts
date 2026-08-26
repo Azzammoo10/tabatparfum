@@ -150,17 +150,45 @@ export const useAdminCustomers = () => {
   }, [load]);
 
   const addCustomer = async (cust: Partial<Customer>) => {
+    // Un-blacklist in case they were previously deleted
+    try {
+      const hidden = getHiddenCustomerKeys();
+      if (cust.name) hidden.delete(cust.name.toLowerCase());
+      if (cust.phone) {
+        hidden.delete(cust.phone.toLowerCase());
+        hidden.delete(cust.phone.replace(/[^0-9]/g, ""));
+      }
+      if (cust.email) hidden.delete(cust.email.toLowerCase());
+      localStorage.setItem("tabat_hidden_customers", JSON.stringify(Array.from(hidden)));
+    } catch {
+      // ignore
+    }
+
+    const safeEmail = cust.email && cust.email.trim().length > 0
+      ? cust.email.trim().toLowerCase()
+      : `client_${Date.now()}_${Math.random().toString(36).slice(2, 7)}@tabat.ma`;
+
     const { error: err } = await supabase.from("customers").insert([
       {
-        name: cust.name,
-        email: cust.email || `${cust.name?.toLowerCase().replace(/[^a-z0-9]/g, "") || "client"}@client.tabat.ma`,
-        phone: cust.phone || null,
-        address: cust.address || null,
+        name: cust.name?.trim(),
+        email: safeEmail,
+        phone: cust.phone?.trim() || null,
+        address: cust.address?.trim() || null,
         total_orders: 0,
         total_spent: 0,
       },
     ]);
-    if (err) return { error: err.message };
+
+    if (err) {
+      if (err.message.includes("customers_email_key") || err.message.includes("duplicate key")) {
+        return { error: "Un client avec cette adresse email existe déjà dans votre base de données." };
+      }
+      if (err.message.includes("customers_phone_key")) {
+        return { error: "Un client avec ce numéro de téléphone existe déjà." };
+      }
+      return { error: err.message };
+    }
+
     await load();
     return { ok: true };
   };

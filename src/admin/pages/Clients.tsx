@@ -125,7 +125,7 @@ const Clients = () => {
     });
     setAdding(false);
     if (res.error) {
-      toast.error("Erreur: " + res.error);
+      toast.error(res.error);
     } else {
       toast.success("Client ajouté avec succès");
       setIsAddOpen(false);
