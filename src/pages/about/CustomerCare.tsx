@@ -1,0 +1,94 @@
+import Header from "../../components/header/Header";
+import Footer from "../../components/footer/Footer";
+import PageHeader from "../../components/about/PageHeader";
+import ContentSection from "../../components/about/ContentSection";
+import AboutSidebar from "../../components/about/AboutSidebar";
+import { Button } from "@/components/ui/button";
+import { Instagram, MessageCircle } from "lucide-react";
+
+const WHATSAPP_NUMBER = "212600000000"; // format international
+const INSTAGRAM_HANDLE = "tabatperfume";
+
+const ServiceClient = () => {
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    "Bonjour TABAT, j'aurais besoin d'un renseignement."
+  )}`;
+  const instagramUrl = `https://instagram.com/${INSTAGRAM_HANDLE}`;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex">
+        <div className="hidden lg:block"><AboutSidebar /></div>
+        <main className="w-full lg:w-[70vw] lg:ml-auto px-6">
+          <PageHeader
+            title="Service Client"
+            subtitle="Nous sommes à votre écoute, du conseil à l'après-vente."
+          />
+          <ContentSection>
+            <div className="grid md:grid-cols-2 gap-12 max-w-4xl">
+              <div className="space-y-3">
+                <h3 className="font-serif text-xl text-primary">Email</h3>
+                <p className="text-foreground/75 font-light">contact@tabatperfume.com</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-serif text-xl text-primary">Horaires</h3>
+                <p className="text-foreground/75 font-light">Lundi — Samedi · 10h — 19h</p>
+              </div>
+            </div>
+          </ContentSection>
+
+          <ContentSection title="Discutons ensemble">
+            <p className="text-foreground/75 font-light max-w-3xl leading-relaxed mb-6">
+              Une question, un conseil parfumé, ou simplement envie d'échanger ?
+              Retrouvez-nous sur WhatsApp ou sur Instagram.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#25D366] hover:bg-[#1ebe57] text-white border-0"
+              >
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Nous contacter sur WhatsApp"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  WhatsApp
+                </a>
+              </Button>
+
+              <Button
+                asChild
+                size="lg"
+                className="text-white border-0 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-90"
+              >
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Nous suivre sur Instagram"
+                >
+                  <Instagram className="mr-2 h-5 w-5" />
+                  @{INSTAGRAM_HANDLE}
+                </a>
+              </Button>
+            </div>
+          </ContentSection>
+
+          <ContentSection title="Retours">
+            <p className="text-foreground/75 font-light max-w-3xl leading-relaxed">
+              Les retours sont acceptés sous 7 jours après réception, pour tout décant non ouvert
+              et dans son emballage d'origine. Contactez-nous par email pour initier la procédure.
+            </p>
+          </ContentSection>
+        </main>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default ServiceClient;

@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Myaura — Dual-theme design system (dark default, light optional) */
+
+@layer base {
+  /* Dark warm palette (default) — derived from the light palette */
+  :root,
+  .dark {
+    --background: 20 32% 8%;         /* #1A120E deep warm brown */
+    --foreground: 26 55% 91%;        /* #F3E7DD warm cream */
+
+    --status-bar: 20 32% 6%;
+    --status-bar-foreground: 26 55% 91%;
+
+    --nav-background: 20 32% 8%;
+    --nav-foreground: 26 55% 91%;
+    --nav-hover: 45 47% 51%;
+
+    --primary: 45 47% 51%;           /* #bc9d45 warm gold */
+    --primary-foreground: 20 32% 8%;
+    --primary-hover: 45 47% 45%;
+
+    --secondary: 20 32% 12%;         /* deep warm surface */
+    --secondary-foreground: 26 55% 91%;
+
+    --muted: 22 25% 18%;
+    --muted-foreground: 26 25% 75%;
+
+    --accent: 357 29% 48%;           /* #9d575b muted red */
+    --accent-foreground: 26 55% 91%;
+
+    --border: 18 26% 22%;
+    --input: 18 26% 22%;
+    --ring: 45 47% 51%;
+
+    --card: 22 30% 13%;              /* #2A1E17 */
+    --card-foreground: 26 55% 91%;
+
+    --popover: 22 30% 13%;
+    --popover-foreground: 26 55% 91%;
+
+    --destructive: 357 45% 42%;
+    --destructive-foreground: 26 55% 91%;
+
+    --radius: 0.25rem;
+
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 20 32% 10%;
+    --sidebar-foreground: 26 55% 91%;
+    --sidebar-primary: 45 47% 51%;
+    --sidebar-primary-foreground: 20 32% 8%;
+    --sidebar-accent: 22 30% 13%;
+    --sidebar-accent-foreground: 26 55% 91%;
+    --sidebar-border: 18 26% 22%;
+    --sidebar-ring: 45 47% 51%;
+  }
+
+  /* Warm soft light palette */
+  .light {
+    --background: 26 55% 91%;        /* #F3E7DD body */
+    --foreground: 18 26% 18%;        /* #3A2A22 main text & headings */
+
+    --status-bar: 26 55% 91%;
+    --status-bar-foreground: 18 26% 18%;
+
+    --nav-background: 26 55% 91%;
+    --nav-foreground: 18 26% 18%;
+    --nav-hover: 357 29% 48%;
+
+    --primary: 45 47% 51%;           /* #bc9d45 warm gold accent */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 45 47% 45%;
+
+    --secondary: 28 53% 93%;         /* #F6EEE7 section bg */
+    --secondary-foreground: 18 26% 18%;
+
+    --muted: 28 53% 93%;             /* #F6EEE7 */
+    --muted-foreground: 18 20% 35%;
+
+    --accent: 357 29% 48%;           /* #9d575b muted red accent */
+    --accent-foreground: 0 0% 100%;
+
+    --border: 25 44% 86%;            /* #EAD8CB card border */
+    --input: 25 44% 86%;
+    --ring: 45 47% 51%;
+
+    --card: 0 0% 100%;               /* #FFFFFF card surface */
+    --card-foreground: 18 26% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 18 26% 18%;
+
+    --destructive: 357 45% 42%;
+    --destructive-foreground: 0 0% 100%;
+
+    --sidebar-background: 28 53% 93%;
+    --sidebar-foreground: 18 26% 18%;
+    --sidebar-primary: 45 47% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 25 44% 86%;
+    --sidebar-accent-foreground: 18 26% 18%;
+    --sidebar-border: 25 44% 86%;
+    --sidebar-ring: 45 47% 51%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
+  }
+
+  html, body, button, input, select, textarea {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans font-light;
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  .font-serif {
+    font-family: 'Sora', 'Manrope', system-ui, sans-serif !important;
+  }
+
+  .font-brand {
+    font-family: 'Playfair Display', 'Sora', serif !important;
+  }
+
+  /* Smooth theme transitions */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color 300ms ease,
+                border-color 300ms ease,
+                color 150ms ease,
+                fill 300ms ease,
+                stroke 300ms ease !important;
+    transition-delay: 0 !important;
+  }
+}
