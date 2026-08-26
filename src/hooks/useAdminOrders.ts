@@ -77,5 +77,12 @@ export const useAdminOrders = () => {
     return { ok: true };
   };
 
-  return { orders, loading, error, refetch: load, updateOrderStatus };
+  const deleteOrder = async (id: string) => {
+    const { error: err } = await supabase.from("orders").delete().eq("id", id);
+    if (err) return { error: err.message };
+    await load();
+    return { ok: true };
+  };
+
+  return { orders, loading, error, refetch: load, updateOrderStatus, deleteOrder };
 };

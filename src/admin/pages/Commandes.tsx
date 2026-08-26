@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { useAdminOrders } from "@/hooks/useAdminOrders";
 import { ORDER_STATUS_LABEL, type OrderStatus, type OrderItem, type Order } from "@/types/database";
 import { toast } from "sonner";
-import { FileDown, MessageCircle } from "lucide-react";
+import { FileDown, MessageCircle, Trash2 } from "lucide-react";
 import { downloadInvoice, sendInvoiceViaWhatsapp } from "@/admin/lib/invoice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_STYLE: Record<OrderStatus, string> = {
   en_attente: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30",
@@ -22,12 +33,24 @@ const summarizeItems = (items: OrderItem[]) =>
   items.map((it) => `${it.parfum_name || (it as OrderItem & { name?: string }).name || "Produit"} (${it.size}) × ${it.quantity}`).join(", ");
 
 const Commandes = () => {
-  const { orders, loading, error, updateOrderStatus } = useAdminOrders();
+  const { orders, loading, error, updateOrderStatus, deleteOrder } = useAdminOrders();
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
 
   const handleStatusChange = async (id: string, status: OrderStatus) => {
     const res = await updateOrderStatus(id, status);
     if (res.error) toast.error("Erreur: " + res.error);
     else toast.success("Statut mis à jour");
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!deletingOrder) return;
+    const res = await deleteOrder(deletingOrder.id);
+    if (res.error) {
+      toast.error("Erreur lors de la suppression : " + res.error);
+    } else {
+      toast.success(`Commande ${deletingOrder.order_number} supprimée`);
+      setDeletingOrder(null);
+    }
   };
 
   const StatusSelect = ({ id, status }: { id: string; status: OrderStatus }) => (
@@ -76,6 +99,14 @@ const Commandes = () => {
         className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
       >
         <MessageCircle className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setDeletingOrder(o)}
+        title="Supprimer la commande"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors"
+      >
+        <Trash2 className="w-4 h-4" />
       </button>
     </div>
   );
@@ -165,6 +196,27 @@ const Commandes = () => {
           );
         })}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingOrder} onOpenChange={(open) => !open && setDeletingOrder(null)}>
+        <AlertDialogContent className="bg-card">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Supprimer cette commande ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              La commande <strong className="text-foreground">{deletingOrder?.order_number}</strong> (Client : {deletingOrder?.customer_name}) sera définitivement supprimée de la base de données. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteOrder}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Supprimer la commande
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
