@@ -1,30 +1,147 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Customer } from "@/types/database";
+import type { Customer, Order } from "@/types/database";
+
+export type EnrichedCustomer = Customer & {
+  last_order_date?: string;
+  city?: string;
+  orders?: Order[];
+  average_basket?: number;
+};
 
 export const useAdminCustomers = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<EnrichedCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      const { data, error: err } = await supabase
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Fetch customers table
+      const { data: dbCustomers, error: custErr } = await supabase
         .from("customers")
         .select("*")
-        .order("total_spent", { ascending: false });
-      if (!alive) return;
-      if (err) setError(err.message);
-      else setCustomers((data ?? []) as unknown as Customer[]);
+        .order("created_at", { ascending: false });
+
+      // 2. Fetch orders table to aggregate real purchases and history
+      const { data: dbOrders, error: ordErr } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      const ordersList = (dbOrders ?? []) as unknown as Order[];
+      const customersMap = new Map<string, EnrichedCustomer>();
+
+      // Populate from customers table
+      if (!custErr && dbCustomers) {
+        dbCustomers.forEach((c) => {
+          const key = (c.phone ? c.phone.replace(/[^0-9]/g, "") : "") || c.email?.toLowerCase() || c.name?.toLowerCase();
+          if (key) {
+            customersMap.set(key, {
+              ...c,
+              total_orders: Number(c.total_orders || 0),
+              total_spent: Number(c.total_spent || 0),
+              orders: [],
+            });
+          }
+        });
+      }
+
+      // Aggregate from all orders (even express checkout orders that didn't create a customer row yet)
+      ordersList.forEach((ord) => {
+        const phoneKey = ord.customer_phone ? ord.customer_phone.replace(/[^0-9]/g, "") : "";
+        const emailKey = ord.customer_email && !ord.customer_email.endsWith("@client.tabat.ma") ? ord.customer_email.toLowerCase() : "";
+        const nameKey = ord.customer_name?.trim().toLowerCase() || "client";
+        const key = phoneKey || emailKey || nameKey;
+
+        const existing = customersMap.get(key);
+        const orderAmount = Number(ord.total_amount || 0);
+
+        if (existing) {
+          existing.orders = existing.orders || [];
+          if (!existing.orders.some((o) => o.id === ord.id)) {
+            existing.orders.push(ord);
+          }
+          // Update address or phone if richer in order
+          if (!existing.phone && ord.customer_phone) existing.phone = ord.customer_phone;
+          if (!existing.address && ord.customer_address) existing.address = ord.customer_address;
+          if (!existing.name && ord.customer_name) existing.name = ord.customer_name;
+          if (!existing.last_order_date || new Date(ord.created_at) > new Date(existing.last_order_date)) {
+            existing.last_order_date = ord.created_at;
+          }
+        } else {
+          customersMap.set(key, {
+            id: `cust_${key}`,
+            name: ord.customer_name || "Client TABAT",
+            email: ord.customer_email || `${nameKey.replace(/[^a-z0-9]/g, "") || "client"}@client.tabat.ma`,
+            phone: ord.customer_phone,
+            address: ord.customer_address,
+            total_orders: 1,
+            total_spent: orderAmount,
+            created_at: ord.created_at,
+            last_order_date: ord.created_at,
+            orders: [ord],
+          });
+        }
+      });
+
+      // Recalculate totals and average basket based on actual orders
+      const list: EnrichedCustomer[] = Array.from(customersMap.values()).map((c) => {
+        const custOrders = c.orders || [];
+        const nonCancelled = custOrders.filter((o) => o.status !== "annulee");
+        const realTotalOrders = custOrders.length > 0 ? custOrders.length : c.total_orders;
+        const realTotalSpent = custOrders.length > 0
+          ? nonCancelled.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+          : Number(c.total_spent || 0);
+        const avg = realTotalOrders > 0 ? Math.round(realTotalSpent / realTotalOrders) : realTotalSpent;
+
+        return {
+          ...c,
+          total_orders: realTotalOrders,
+          total_spent: realTotalSpent,
+          average_basket: avg,
+        };
+      });
+
+      // Sort by total spent desc
+      list.sort((a, b) => b.total_spent - a.total_spent);
+      setCustomers(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors du chargement des clients");
+    } finally {
       setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
+    }
   }, []);
 
-  return { customers, loading, error };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const addCustomer = async (cust: Partial<Customer>) => {
+    const { error: err } = await supabase.from("customers").insert([
+      {
+        name: cust.name,
+        email: cust.email || `${cust.name?.toLowerCase().replace(/[^a-z0-9]/g, "") || "client"}@client.tabat.ma`,
+        phone: cust.phone || null,
+        address: cust.address || null,
+        total_orders: 0,
+        total_spent: 0,
+      },
+    ]);
+    if (err) return { error: err.message };
+    await load();
+    return { ok: true };
+  };
+
+  const deleteCustomer = async (id: string) => {
+    if (!id.startsWith("cust_")) {
+      const { error: err } = await supabase.from("customers").delete().eq("id", id);
+      if (err) return { error: err.message };
+    }
+    await load();
+    return { ok: true };
+  };
+
+  return { customers, loading, error, refetch: load, addCustomer, deleteCustomer };
 };
