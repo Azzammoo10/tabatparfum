@@ -1,202 +1,288 @@
+import { useState } from "react";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import Seo from "@/components/Seo";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ShieldCheck, Truck, CreditCard, Headphones, HeartHandshake, ArrowRight, CheckCircle2 } from "lucide-react";
-import heroImage from "@/assets/hero-image.jpg";
+import {
+  Sparkles,
+  ShieldCheck,
+  Truck,
+  CreditCard,
+  Headphones,
+  HeartHandshake,
+  ArrowRight,
+  CheckCircle2,
+  Crown,
+  Droplets,
+  HelpCircle,
+  ChevronDown,
+  MessageCircle,
+  Award,
+  Flame,
+  Flower2,
+} from "lucide-react";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
-const whyUsFeatures = [
+const pillars = [
+  {
+    icon: Droplets,
+    title: "Décantation Artisanale & Stérilisée",
+    desc: "Chaque parfum est prélevé à la commande à l'aide de matériel de précision à usage unique. Le liquide est transféré dans des atomiseurs en verre hermétiques pour préserver l'intégrité de la pyramide olfactive.",
+    tag: "Précision Médicale",
+  },
   {
     icon: ShieldCheck,
-    title: "Qualité Sélectionnée",
-    desc: "Nous sélectionnons nos produits avec le plus grand soin afin de garantir une expérience à la hauteur de vos attentes.",
+    title: "100% Authenticité Garantie",
+    desc: "Nous nous approvisionnons exclusivement auprès des circuits officiels et distributeurs agréés des plus grandes maisons de niche et de luxe. Zéro contrefaçon, zéro imitation.",
+    tag: "Flacons Originaux",
+  },
+  {
+    icon: Crown,
+    title: "Formats Idéaux (5ml & 10ml)",
+    desc: "Testez les plus grands chefs-d'œuvre de la parfumerie sur votre peau pendant plusieurs semaines avant d'investir dans un flacon complet. Environ 70 pulvérisations pour 5ml et 140 pour 10ml.",
+    tag: "Découverte Nomade",
   },
   {
     icon: Truck,
-    title: "Livraison Rapide",
-    desc: "Nous livrons partout au Maroc sous 24 à 48 heures pour que vous puissiez profiter rapidement de vos produits préférés.",
-  },
-  {
-    icon: CreditCard,
-    title: "Paiement à la Livraison",
-    desc: "Commandez en toute confiance grâce au paiement en espèces à la réception de votre colis.",
-  },
-  {
-    icon: Headphones,
-    title: "Service Client Dédié",
-    desc: "Notre équipe reste disponible pour répondre à vos questions et vous accompagner à chaque étape.",
+    title: "Livraison Rapide Partout au Maroc",
+    desc: "Vos précieux flacons sont emballés dans des écrins protecteurs anti-chocs et expédiés sous 24 à 48 heures avec paiement à la livraison à Casablanca, Rabat, Marrakech, Tanger et dans toutes les villes du Royaume.",
+    tag: "24–48h à Domicile",
   },
 ];
 
-const selectionItems = [
-  "Parfums Homme d'exception",
-  "Parfums Femme raffinés",
-  "Déodorants Stick Premium",
-  "Meilleures Ventes plébiscitées",
+const faqs = [
+  {
+    q: "Qu'est-ce qu'un décant de parfum ?",
+    a: "Un décant est une fraction d'un flacon original de parfum, prélevée minutieusement et transférée dans un atomiseur compact en verre de haute qualité. Cela vous permet d'accéder aux plus grandes créations de luxe à une fraction du prix d'un flacon complet.",
+  },
+  {
+    q: "Les parfums sont-ils vraiment originaux ?",
+    a: "Absolument. Chez TABAT, nous n'utilisons aucun clone ni parfum générique. Tous nos décants proviennent directement des flacons d'origine des marques officielles (Maison Francis Kurkdjian, BDK, Creed, Tom Ford, Initio, Xerjoff...).",
+  },
+  {
+    q: "Combien de temps durent les formats 5ml et 10ml ?",
+    a: "Un format 5ml offre environ 70 à 80 vaporisations (soit environ 3 à 4 semaines d'utilisation quotidienne). Le format 10ml offre entre 140 et 160 vaporisations (environ 2 mois d'usage régulier).",
+  },
+  {
+    q: "Comment sont protégés les flacons durant l'expédition ?",
+    a: "Chaque atomiseur est scellé avec un film étanche et conditionné dans un emballage rembourré sur-mesure pour empêcher toute évaporation ou casse durant le transport.",
+  },
 ];
 
 const AboutTabat = () => {
+  const { settings } = useAppSettings();
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const rawPhone = settings.whatsapp_phone || "212752850156";
+  const waNumber = rawPhone.replace(/[^0-9]/g, "");
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Bonjour TABAT, j'aimerais avoir des informations sur vos parfums.")}`;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col selection:bg-primary/20">
       <Seo
-        title="À Propos de TABAT | L'élégance au quotidien, le parfum comme signature"
-        description="Chez Tabat, nous croyons qu'un parfum est une signature personnelle. Découvrir notre histoire, notre vision et nos engagements de qualité au Maroc."
+        title="À Propos de TABAT | Maison de Haute Parfumerie & Décantation au Maroc"
+        description="Découvrez l'univers TABAT : l'art de la haute parfumerie accessible au Maroc grâce à la décantation artisanale de fragrances 100% authentiques."
         path="/about"
       />
       <Header />
 
-      <main className="flex-1 pt-4 pb-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-12 sm:space-y-16">
-          {/* Header Banner */}
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] uppercase">
-              <Sparkles className="w-3 h-3 text-primary animate-pulse shrink-0" />
-              <span>L'Univers TABAT</span>
+      <main className="flex-1 pb-20">
+        {/* Luxury Hero Banner */}
+        <section className="relative overflow-hidden border-b border-border/70 bg-gradient-to-b from-card/70 via-card/30 to-background pt-10 pb-16 px-4 sm:px-6">
+          {/* Subtle Ambient Glows */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-4xl mx-auto text-center relative z-10 space-y-5">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-[0.25em]">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              <span>Maison de Haute Parfumerie</span>
             </div>
 
-            <h1 className="font-serif text-3xl sm:text-5xl text-foreground font-medium tracking-tight">
-              À Propos de <span className="text-primary italic font-serif">TABAT</span>
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl text-foreground font-bold tracking-tight">
+              L'Art du Parfum comme <span className="text-primary italic font-serif">Signature</span>
             </h1>
 
             <p className="text-sm sm:text-base text-muted-foreground font-light leading-relaxed max-w-2xl mx-auto">
-              Chez Tabat, nous croyons qu'un parfum est bien plus qu'une simple fragrance. C'est une signature personnelle, une émotion, un souvenir et une expression de votre identité.
+              Chez TABAT, nous croyons qu'un parfum est bien plus qu'une fragrance. C'est une émotion vivante, un sillage inoubliable et l'expression la plus intime de votre personnalité.
             </p>
 
-            <div className="w-12 h-0.5 bg-primary/40 mx-auto pt-1" />
-          </div>
+            {/* Quick Actions */}
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                asChild
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wider font-semibold h-11 px-7 shadow-md gap-2 cursor-pointer"
+              >
+                <Link to="/collection/all">
+                  Explorer la Collection <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
 
-          {/* Intro Quote Banner */}
-          <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card/60 backdrop-blur-md p-6 sm:p-10 text-center shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+              <Button
+                asChild
+                variant="outline"
+                className="rounded-full border-border hover:border-primary text-xs uppercase tracking-wider font-semibold h-11 px-7 cursor-pointer"
+              >
+                <a href={waUrl} target="_blank" rel="noopener noreferrer" className="gap-2 flex items-center">
+                  <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                  Conseil Personnalisé
+                </a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-16 sm:space-y-24 mt-12 sm:mt-16">
+          {/* Quote Manifest */}
+          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card/80 backdrop-blur-xl p-8 sm:p-12 text-center shadow-lg">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
             <blockquote className="relative z-10 font-serif text-lg sm:text-2xl text-foreground italic font-light max-w-3xl mx-auto leading-relaxed">
-              « Née d'une passion pour l'élégance, le raffinement et le bien-être, Tabat a été créée pour offrir aux femmes et aux hommes au Maroc une sélection de produits qui allient qualité, sophistication et plaisir au quotidien. »
+              « Démocratiser l'accès aux plus grands trésors de la haute parfumerie mondiale au Maroc, en garantissant une authenticité absolue et une expérience olfactive d'exception. »
             </blockquote>
-          </div>
-
-          {/* Vision & Selection Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-            {/* Card 1: Notre Vision */}
-            <div className="bg-card/50 border border-border/70 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-4 hover:border-primary/40 transition-all">
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <h2 className="font-serif text-xl sm:text-2xl text-foreground font-medium">
-                  Notre Vision
-                </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                  Notre ambition est de devenir une référence marocaine dans l'univers des parfums et des soins personnels premium. Nous souhaitons proposer des produits soigneusement sélectionnés qui permettent à chacun de se sentir confiant, élégant et unique.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-border/40 text-[10px] uppercase tracking-widest text-primary font-semibold">
-                Excellence & Sophistication
-              </div>
-            </div>
-
-            {/* Card 2: Notre Sélection */}
-            <div className="bg-card/50 border border-border/70 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-4 hover:border-primary/40 transition-all">
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                  <HeartHandshake className="w-5 h-5" />
-                </div>
-                <h2 className="font-serif text-xl sm:text-2xl text-foreground font-medium">
-                  Notre Sélection
-                </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                  Chaque produit disponible chez Tabat est choisi avec attention afin de répondre à nos exigences de qualité et de performance.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                  {selectionItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs font-medium text-foreground bg-background/60 p-2 rounded-xl border border-border/50">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-border/40 text-[10px] uppercase tracking-widest text-primary font-semibold">
-                Expérience Sensorielle Unique
-              </div>
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs uppercase tracking-widest text-primary font-bold">
+              <span>— Philosophie de la Maison TABAT</span>
             </div>
           </div>
 
-          {/* Pourquoi Choisir Tabat ? */}
-          <div className="space-y-6 sm:space-y-8">
-            <div className="text-center max-w-xl mx-auto space-y-1.5">
-              <p className="text-xs uppercase tracking-[0.3em] text-primary font-medium">
-                Nos Valeurs
-              </p>
-              <h2 className="font-serif text-2xl sm:text-4xl text-foreground font-medium">
-                Pourquoi Choisir Tabat ?
+          {/* The 4 Pillars */}
+          <div className="space-y-8">
+            <div className="text-center max-w-xl mx-auto space-y-2">
+              <span className="text-xs uppercase tracking-[0.25em] text-primary font-semibold">
+                Excellence & Rigueur
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-foreground font-bold tracking-tight">
+                Les 4 Piliers de l'Engagement TABAT
               </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground font-light">
+                Un processus rigoureux à chaque étape pour vous garantir le meilleur de la décantation artisanale.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {whyUsFeatures.map((f, i) => {
-                const Icon = f.icon;
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {pillars.map((p, i) => {
+                const Icon = p.icon;
                 return (
                   <div
                     key={i}
-                    className="bg-card/40 border border-border/70 rounded-2xl p-5 text-center space-y-3 hover:border-primary/50 hover:bg-card/70 transition-all duration-300 group"
+                    className="bg-card/70 border border-border/80 hover:border-primary/40 rounded-3xl p-6 sm:p-8 space-y-4 transition-all duration-300 shadow-xs hover:shadow-md group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary mx-auto group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                      <Icon className="w-5 h-5" />
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full bg-secondary border border-border text-foreground">
+                        {p.tag}
+                      </span>
                     </div>
-                    <h3 className="font-serif text-base font-semibold text-foreground">
-                      {f.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                      {f.desc}
-                    </p>
+
+                    <div className="space-y-2">
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                        {p.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+                        {p.desc}
+                      </p>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Notre Engagement & Conclusion Banner */}
-          <div className="bg-card border border-primary/30 rounded-2xl p-6 sm:p-10 text-center space-y-6 shadow-md">
-            <div className="max-w-2xl mx-auto space-y-3">
-              <h2 className="font-serif text-2xl sm:text-3xl text-foreground font-medium">
-                Notre Engagement
+          {/* FAQ Accordion Section */}
+          <div className="space-y-8">
+            <div className="text-center max-w-xl mx-auto space-y-2">
+              <span className="text-xs uppercase tracking-[0.25em] text-primary font-semibold">
+                Foire Aux Questions
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-foreground font-bold tracking-tight">
+                Tout Savoir sur nos Décants
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                Chez Tabat, la satisfaction de nos clients est au cœur de nos priorités. Nous nous engageons à offrir une expérience d'achat simple, sécurisée et agréable, depuis votre première visite jusqu'à la réception de votre commande.
+              <p className="text-xs sm:text-sm text-muted-foreground font-light">
+                Des réponses transparentes à toutes vos interrogations sur la provenance et l'utilisation.
               </p>
             </div>
 
-            <div className="border-t border-border/60 pt-6">
-              <p className="font-serif text-base sm:text-lg text-primary italic font-semibold">
-                « Tabat — L'élégance au quotidien, le parfum comme signature. »
-              </p>
-              <p className="text-xs text-muted-foreground font-light mt-1">
-                Merci de faire partie de l'univers Tabat.
-              </p>
+            <div className="max-w-3xl mx-auto space-y-3">
+              {faqs.map((faq, index) => {
+                const isOpen = openFaq === index;
+                return (
+                  <div
+                    key={index}
+                    className="border border-border/80 rounded-2xl bg-card/60 overflow-hidden transition-all"
+                  >
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : index)}
+                      className="w-full flex items-center justify-between p-5 text-left text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-3">
+                        <HelpCircle className="w-4 h-4 text-primary shrink-0" />
+                        <span>{faq.q}</span>
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-muted-foreground transition-transform duration-300 shrink-0 ${
+                          isOpen ? "rotate-180 text-primary" : ""
+                        }`}
+                      />
+                    </button>
 
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <Button
-                  asChild
-                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary-hover uppercase tracking-wider text-xs h-11 px-7 shadow-md gap-2"
-                >
-                  <Link to="/collection/all">
-                    Découvrir la Collection <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-muted-foreground font-light leading-relaxed border-t border-border/40 animate-in fade-in-0 duration-200">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-                <Button
-                  asChild
-                  variant="outline"
-                  className="rounded-full border-border hover:border-primary uppercase tracking-wider text-xs h-11 px-7"
-                >
-                  <Link to="/about/service-client">
-                    Service Client & Contact
-                  </Link>
-                </Button>
+          {/* Bottom Luxury VIP Invitation Card */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-tr from-card via-card/90 to-background border border-primary/30 p-8 sm:p-12 text-center space-y-6 shadow-xl">
+            <div className="max-w-2xl mx-auto space-y-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary mx-auto">
+                <Crown className="w-6 h-6" />
               </div>
+              <h2 className="font-serif text-2xl sm:text-3xl text-foreground font-bold">
+                Prêt à Trouver Votre Prochaine Signature ?
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+                Explorez nos collections masculines, féminines et coffrets exclusifs, ou laissez notre conseiller vous orienter selon vos goûts.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wider font-bold px-8 shadow-md gap-2 cursor-pointer"
+              >
+                <Link to="/collection/homme">
+                  <Flame className="w-4 h-4" /> Parfums Homme
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="rounded-full border-border hover:border-primary text-xs uppercase tracking-wider font-bold px-8 cursor-pointer"
+              >
+                <Link to="/collection/femme">
+                  <Flower2 className="w-4 h-4 text-primary" /> Parfums Femme
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs uppercase tracking-wider font-bold px-8 shadow-md gap-2 cursor-pointer border-0"
+              >
+                <a href={waUrl} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-4 h-4" /> WhatsApp Direct
+                </a>
+              </Button>
             </div>
           </div>
         </div>
