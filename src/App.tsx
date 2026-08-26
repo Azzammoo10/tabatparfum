@@ -21,6 +21,7 @@ import AdminGuard from "./admin/AdminGuard";
 import AdminLayout from "./admin/AdminLayout";
 import Dashboard from "./admin/pages/Dashboard";
 import Produits from "./admin/pages/Produits";
+import CategoriesAdmin from "./admin/pages/Categories";
 import Commandes from "./admin/pages/Commandes";
 import Clients from "./admin/pages/Clients";
 import Parametres from "./admin/pages/Parametres";
@@ -57,6 +58,7 @@ const App = () => (
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<Dashboard />} />
                   <Route path="/admin/produits" element={<Produits />} />
+                  <Route path="/admin/categories" element={<CategoriesAdmin />} />
                   <Route path="/admin/bestsellers" element={<BestSellersAdmin />} />
                   <Route path="/admin/saison" element={<SeasonalAdmin />} />
                   <Route path="/admin/commandes" element={<Commandes />} />

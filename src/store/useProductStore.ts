@@ -39,7 +39,12 @@ const load = (): AdminParfum[] => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as AdminParfum[];
-      if (Array.isArray(parsed) && parsed.length) return parsed.map(withDefaults);
+      if (Array.isArray(parsed) && parsed.length) {
+        // Fusionner les produits seed manquants (packs, déodorants) si non présents dans le localStorage
+        const existingIds = new Set(parsed.map((p) => p.id));
+        const missingSeed = seed.filter((s) => !existingIds.has(s.id));
+        return [...parsed, ...missingSeed].map(withDefaults);
+      }
     }
   } catch {}
   return seed.map((p) => withDefaults(p as AdminParfum));

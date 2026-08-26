@@ -14,6 +14,7 @@ import {
   Sparkle,
   CheckCircle2,
   Info,
+  Zap,
 } from "lucide-react";
 import { formatMAD } from "@/lib/sizes";
 import {
@@ -131,8 +132,9 @@ const SeasonalAdmin = () => {
               }`}
             >
               <div>
-                <span className="font-medium text-xs text-[#111827] dark:text-[#F9FAFB] block">
-                  ⚡ Automatique (Météo / Mois)
+                <span className="font-medium text-xs text-[#111827] dark:text-[#F9FAFB] flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-[#C9A96E]" />
+                  <span>Automatique (Météo / Mois)</span>
                 </span>
                 <span className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF] block mt-0.5">
                   Saison actuelle détectée: <strong className="text-[#C9A96E] capitalize">{SEASONS[detectedSeason].label}</strong>
@@ -223,8 +225,11 @@ const SeasonalAdmin = () => {
             </div>
           </div>
 
-          <div className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF] bg-[#F3F4F6] dark:bg-[#111827] p-3 rounded">
-            💡 En mode <strong>Automatique</strong>, le site affichera <strong>Été</strong> en Juin-Août, <strong>Automne</strong> en Sept-Nov, <strong>Hiver</strong> en Déc-Fév, <strong>Printemps</strong> en Mars-Mai.
+          <div className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF] bg-[#F3F4F6] dark:bg-[#111827] p-3 rounded flex items-start gap-2">
+            <Info className="w-3.5 h-3.5 text-[#C9A96E] shrink-0 mt-0.5" />
+            <span>
+              En mode <strong>Automatique</strong>, le site affichera <strong>Été</strong> en Juin-Août, <strong>Automne</strong> en Sept-Nov, <strong>Hiver</strong> en Déc-Fév, <strong>Printemps</strong> en Mars-Mai.
+            </span>
           </div>
         </div>
       </div>

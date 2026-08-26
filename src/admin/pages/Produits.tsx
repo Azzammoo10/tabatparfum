@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Layers, User, Users, Gift, Sparkles, Wine } from "lucide-react";
 import ProductTable from "../components/ProductTable";
 import ProductModal from "../components/ProductModal";
 import DeleteDialog from "../components/DeleteDialog";
@@ -7,13 +7,22 @@ import { deleteProduct, useProducts, type AdminParfum } from "@/store/useProduct
 import { deleteParfumFromSupabase } from "@/admin/lib/syncParfum";
 import { toast } from "sonner";
 
-const FILTERS = ["Tous", "Homme", "Femme", "Mixte"] as const;
-type Filter = (typeof FILTERS)[number];
+type FilterId = "Tous" | "Homme" | "Femme" | "Mixte" | "packs" | "deodorants-stick" | "full_bottle";
+
+const FILTER_OPTIONS = [
+  { id: "Tous" as FilterId, label: "Tous", icon: Layers },
+  { id: "Homme" as FilterId, label: "Homme", icon: User },
+  { id: "Femme" as FilterId, label: "Femme", icon: User },
+  { id: "Mixte" as FilterId, label: "Mixte", icon: Users },
+  { id: "packs" as FilterId, label: "Packs & Coffrets", icon: Gift },
+  { id: "deodorants-stick" as FilterId, label: "Déodorants Stick", icon: Sparkles },
+  { id: "full_bottle" as FilterId, label: "Flacons Complets", icon: Wine },
+];
 
 const Produits = () => {
   const products = useProducts();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("Tous");
+  const [filter, setFilter] = useState<FilterId>("Tous");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminParfum | null>(null);
   const [deleting, setDeleting] = useState<AdminParfum | null>(null);
@@ -21,8 +30,19 @@ const Produits = () => {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return products.filter((p) => {
-      if (filter !== "Tous" && p.gender !== filter) return false;
-      if (q && !(p.name.toLowerCase().includes(q) || p.maison.toLowerCase().includes(q))) return false;
+      if (filter === "Homme" && p.gender !== "Homme") return false;
+      if (filter === "Femme" && p.gender !== "Femme") return false;
+      if (filter === "Mixte" && p.gender !== "Mixte") return false;
+      if (filter === "packs" && p.category !== "packs" && !p.id.startsWith("pack-") && !p.name.toLowerCase().includes("pack")) return false;
+      if (filter === "deodorants-stick" && p.category !== "deodorants-stick" && !p.id.includes("deodorant") && !p.id.includes("old-spice")) return false;
+      if (filter === "full_bottle" && (p.sale_mode !== "full_bottle" && p.category !== "deodorants-stick" && p.category !== "packs")) return false;
+
+      if (q) {
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesMaison = p.maison.toLowerCase().includes(q);
+        const matchesCat = p.category?.toLowerCase().includes(q);
+        if (!matchesName && !matchesMaison && !matchesCat) return false;
+      }
       return true;
     });
   }, [products, search, filter]);
@@ -62,20 +82,24 @@ const Produits = () => {
               className="w-full pl-9 pr-3 py-2 text-sm bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-2 focus:ring-[#C9A96E]"
             />
           </div>
-          <div className="flex gap-1.5 overflow-x-auto">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-colors ${
-                  filter === f
-                    ? "bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] border-[#111827]"
-                    : "bg-[#FFFFFF] dark:bg-[#1A1A1A] text-[#6B7280] dark:text-[#9CA3AF] border-[#E5E7EB] dark:border-[#2A2A2A] hover:text-[#111827] dark:text-[#F9FAFB]"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {FILTER_OPTIONS.map((f) => {
+              const Icon = f.icon;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all cursor-pointer ${
+                    filter === f.id
+                      ? "bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] border-[#111827] dark:border-[#C9A96E] shadow-xs font-semibold"
+                      : "bg-[#FFFFFF] dark:bg-[#1A1A1A] text-[#6B7280] dark:text-[#9CA3AF] border-[#E5E7EB] dark:border-[#2A2A2A] hover:border-[#C9A96E]/50 hover:text-[#111827] dark:hover:text-[#F9FAFB]"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{f.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <button

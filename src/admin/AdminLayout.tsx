@@ -16,6 +16,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Store,
+  FolderTree,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -31,6 +32,7 @@ const NAV_GROUPS = [
     title: "Catalogue & Vitrine",
     items: [
       { to: "/admin/produits", label: "Tous les Produits", icon: Package },
+      { to: "/admin/categories", label: "Catégories", icon: FolderTree },
       { to: "/admin/bestsellers", label: "Best Sellers", icon: Flame, badge: "Vedettes" },
       { to: "/admin/saison", label: "Parfums de Saison", icon: Sparkles },
     ],
@@ -55,6 +57,7 @@ const NAV_GROUPS = [
 const TITLES: Record<string, string> = {
   "/admin": "Tableau de bord",
   "/admin/produits": "Gestion du Catalogue Produits",
+  "/admin/categories": "Gestion des Catégories & Collections",
   "/admin/bestsellers": "Gestion des Best Sellers",
   "/admin/saison": "Gestion des Parfums de Saison",
   "/admin/commandes": "Gestion des Commandes",
