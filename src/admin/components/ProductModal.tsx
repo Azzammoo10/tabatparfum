@@ -4,7 +4,8 @@ import { Switch } from "@/components/ui/switch";
 import { addProduct, updateProduct, type AdminParfum, type SaleMode } from "@/store/useProductStore";
 import { uploadProductImage, upsertParfumToSupabase } from "@/admin/lib/syncParfum";
 import type { Gender } from "@/data/parfums";
-import { Upload, X, Loader2, Droplet, Wine, Plus, Trash2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Upload, X, Loader2, Droplet, Wine, Plus, Trash2, Sparkles, AlertCircle } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -54,7 +55,9 @@ const isUuid = (s: string) =>
 
 const labelCls = "block text-xs font-medium text-[#111827] dark:text-[#F9FAFB] mb-1";
 const inputCls =
-  "w-full px-3 py-2 text-sm bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-2 focus:ring-[#C9A96E] text-[#111827] dark:text-[#F9FAFB]";
+  "w-full px-3 py-2 text-sm bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-2 focus:ring-[#C9A96E] text-[#111827] dark:text-[#F9FAFB] transition-colors";
+const inputErrorCls =
+  "w-full px-3 py-2 text-sm bg-red-50/50 dark:bg-red-950/20 border border-red-500 dark:border-red-500 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500/30 text-[#111827] dark:text-[#F9FAFB] transition-colors";
 
 const ProductModal = ({ open, onOpenChange, initial }: Props) => {
   const [f, setF] = useState(emptyForm);
@@ -130,10 +133,28 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
     }
   }, [open, initial]);
 
-  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((s) => ({ ...s, [k]: v }));
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => {
+    setF((s) => ({ ...s, [k]: v }));
+    // Clear error on edit
+    if (errors[k]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[k];
+        return next;
+      });
+    }
+  };
 
   const updateFormat = (id: string, patch: Partial<FormatItem>) => {
     setFormats((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+    // Clear field error on format edit
+    if (errors[`format_${id}`]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[`format_${id}`];
+        return next;
+      });
+    }
   };
 
   const addFormat = (ml: number = 20) => {
@@ -185,24 +206,24 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!f.name.trim()) errs.name = "Nom requis";
-    if (!f.maison.trim()) errs.maison = "Maison requise";
+    if (!f.name.trim()) errs.name = "Veuillez renseigner le nom du parfum";
+    if (!f.maison.trim()) errs.maison = "Veuillez renseigner la maison ou marque";
 
     const isFull = f.saleMode === "full_bottle";
     const fbPrice = Number(f.fbPrice);
     const fbVolume = Number(f.fbVolume);
 
     if (isFull) {
-      if (!fbVolume || fbVolume <= 0) errs.fbVolume = "Volume requis";
-      if (!fbPrice || fbPrice <= 0) errs.fbPrice = "Prix requis";
+      if (!fbVolume || fbVolume <= 0) errs.fbVolume = "Veuillez indiquer le volume du flacon (ex: 100 ml)";
+      if (!fbPrice || fbPrice <= 0) errs.fbPrice = "Veuillez indiquer le prix de vente du flacon";
     } else {
       if (formats.length === 0) {
-        errs.formats = "Veuillez ajouter au moins un format de vente";
+        errs.formats = "Veuillez configurer au moins un format de vente (ex: 5 ml, 10 ml)";
       } else {
         formats.forEach((item) => {
           const p = Number(item.price);
           if (!p || p <= 0) {
-            errs[`format_${item.id}`] = `Prix requis pour ${item.ml} ml`;
+            errs[`format_${item.id}`] = `Veuillez renseigner le prix pour le format ${item.ml} ml`;
           }
         });
       }
@@ -210,6 +231,9 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
 
     if (Object.keys(errs).length) {
       setErrors(errs);
+      toast.error("Formulaire incomplet", {
+        description: "Veuillez renseigner les champs obligatoires surlignés en rouge.",
+      });
       return;
     }
 
@@ -301,6 +325,24 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-6 mt-4">
+          {/* Global Validation Alert Banner */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3.5 flex items-start gap-3 text-xs text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Des informations obligatoires sont manquantes ou incorrectes :</span>
+                <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px] opacity-90">
+                  {Object.values(errors).slice(0, 3).map((msg, i) => (
+                    <li key={i}>{msg}</li>
+                  ))}
+                  {Object.keys(errors).length > 3 && (
+                    <li>Et {Object.keys(errors).length - 3} autre(s) champ(s)...</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Sale mode selector */}
           <section className="bg-[#F8F9FA] dark:bg-[#0F0F0F] p-4 rounded-xl border border-[#E5E7EB] dark:border-[#2A2A2A]">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#C9A96E] mb-3">Mode de vente</h3>
@@ -318,7 +360,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                   <Droplet className="w-4 h-4 text-[#C9A96E]" />
                   <span className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">Décants / Échantillons</span>
                 </div>
-                <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Vente au format fractionné : 5 ml, 10 ml et 20 ml.</p>
+                <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Vente au format fractionné : 5 ml, 10 ml, 20 ml, etc.</p>
               </button>
 
               <button
@@ -349,14 +391,34 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={labelCls}>Nom du parfum *</label>
-                    <input className={inputCls} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex: Baccarat Rouge 540" />
-                    {errors.name && <p className="text-xs text-[#EF4444] mt-1">{errors.name}</p>}
+                    <input
+                      className={errors.name ? inputErrorCls : inputCls}
+                      value={f.name}
+                      onChange={(e) => set("name", e.target.value)}
+                      placeholder="Ex: Baccarat Rouge 540"
+                    />
+                    {errors.name && (
+                      <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5 font-medium animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     <label className={labelCls}>Maison / Marque *</label>
-                    <input className={inputCls} value={f.maison} onChange={(e) => set("maison", e.target.value)} placeholder="Ex: Maison Francis Kurkdjian" />
-                    {errors.maison && <p className="text-xs text-[#EF4444] mt-1">{errors.maison}</p>}
+                    <input
+                      className={errors.maison ? inputErrorCls : inputCls}
+                      value={f.maison}
+                      onChange={(e) => set("maison", e.target.value)}
+                      placeholder="Ex: Maison Francis Kurkdjian"
+                    />
+                    {errors.maison && (
+                      <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5 font-medium animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.maison}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="sm:col-span-2">
@@ -486,7 +548,7 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                                 <input
                                   type="number"
                                   min={1}
-                                  className={inputCls + " pr-12 font-medium"}
+                                  className={(fieldError ? inputErrorCls : inputCls) + " pr-12 font-medium"}
                                   value={item.price}
                                   onChange={(e) => updateFormat(item.id, { price: e.target.value })}
                                   placeholder="Ex: 120"
@@ -495,7 +557,12 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                                   MAD
                                 </span>
                               </div>
-                              {fieldError && <p className="text-xs text-[#EF4444] mt-1">{fieldError}</p>}
+                              {fieldError && (
+                                <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5 font-medium animate-in fade-in">
+                                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{fieldError}</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* Stock in bottles */}
@@ -548,7 +615,10 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                     </div>
 
                     {errors.formats && (
-                      <p className="text-xs text-[#EF4444] font-medium">{errors.formats}</p>
+                      <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1 font-medium animate-in fade-in p-2.5 rounded-lg bg-red-500/10 border border-red-500/30">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{errors.formats}</span>
+                      </div>
                     )}
                   </div>
                 </section>
@@ -558,14 +628,38 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className={labelCls}>Volume (ml) *</label>
-                      <input type="number" min={1} className={inputCls} value={f.fbVolume} onChange={(e) => set("fbVolume", e.target.value)} placeholder="100" />
-                      {errors.fbVolume && <p className="text-xs text-[#EF4444] mt-1">{errors.fbVolume}</p>}
+                      <input
+                        type="number"
+                        min={1}
+                        className={errors.fbVolume ? inputErrorCls : inputCls}
+                        value={f.fbVolume}
+                        onChange={(e) => set("fbVolume", e.target.value)}
+                        placeholder="100"
+                      />
+                      {errors.fbVolume && (
+                        <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5 font-medium animate-in fade-in">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.fbVolume}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <label className={labelCls}>Prix (MAD) *</label>
-                      <input type="number" min={0} className={inputCls} value={f.fbPrice} onChange={(e) => set("fbPrice", e.target.value)} placeholder="1800" />
-                      {errors.fbPrice && <p className="text-xs text-[#EF4444] mt-1">{errors.fbPrice}</p>}
+                      <input
+                        type="number"
+                        min={0}
+                        className={errors.fbPrice ? inputErrorCls : inputCls}
+                        value={f.fbPrice}
+                        onChange={(e) => set("fbPrice", e.target.value)}
+                        placeholder="1800"
+                      />
+                      {errors.fbPrice && (
+                        <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5 font-medium animate-in fade-in">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.fbPrice}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div>
