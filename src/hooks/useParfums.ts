@@ -162,9 +162,10 @@ export const useParfums = (filter?: ParfumFilter) => {
     window.addEventListener("tabat_products_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
-    // Supabase Realtime channel
+    // Unique Supabase Realtime channel topic per component instance
+    const channelTopic = `parfums_live_${Math.random().toString(36).slice(2, 9)}`;
     const channel = supabase
-      .channel("realtime:parfums")
+      .channel(channelTopic)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "parfums" },
@@ -246,12 +247,14 @@ export const useParfum = (id?: string) => {
   }, [fetchItem]);
 
   useEffect(() => {
+    if (!id) return;
     const handleUpdate = () => fetchItem();
     window.addEventListener("tabat_products_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
+    const channelTopic = `parfum_live_${id}_${Math.random().toString(36).slice(2, 9)}`;
     const channel = supabase
-      .channel(`realtime:parfum:${id}`)
+      .channel(channelTopic)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "parfums", filter: `id=eq.${id}` },
