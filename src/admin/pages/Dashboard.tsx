@@ -15,14 +15,16 @@ const BottleCard = ({
   label,
   available,
   used,
+  initialStock,
   isLow,
 }: {
   label: string;
   available: number;
   used: number;
+  initialStock: number;
   isLow?: boolean;
 }) => {
-  const total = available + used;
+  const total = initialStock > 0 ? initialStock : available + used;
   const pct = total > 0 ? Math.round((used / total) * 100) : 0;
   return (
     <div className="bg-card border border-border rounded-lg p-5">
@@ -178,6 +180,7 @@ const Dashboard = () => {
                 label={label}
                 available={f?.stock ?? 0}
                 used={f?.used ?? 0}
+                initialStock={f?.initialStock ?? 0}
                 isLow={f?.isLow}
               />
             );

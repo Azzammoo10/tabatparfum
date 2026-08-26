@@ -31,21 +31,22 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
   const related = [...sameMaison, ...otherParfums].slice(0, 4);
 
   return (
-    <section className="w-full mt-16 sm:mt-24 max-w-7xl mx-auto px-4 sm:px-6">
-      <div className="flex items-end justify-between mb-6 sm:mb-8 border-b border-border/60 pb-4">
+    <section className="w-full mt-20 sm:mt-32 pt-10 border-t border-border/40 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-end justify-between mb-6 sm:mb-8 pb-3 border-b border-border/40">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-primary mb-1 font-medium">
-            Trouvez tout ce que vous voulez {maison ? `• ${maison}` : ""}
+          <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold mb-1">
+            {maison ? `Maison ${maison}` : "Haute Parfumerie"}
           </p>
-          <h2 className="font-serif text-2xl sm:text-3xl text-foreground">
-            Produits apparentés
+          <h2 className="font-serif text-xl sm:text-3xl text-foreground font-medium">
+            Produits Apparentés
           </h2>
         </div>
         <Link
           to="/collection/all"
-          className="text-[11px] sm:text-xs uppercase tracking-widest text-primary hover:text-primary-hover border-b border-primary/40 pb-0.5"
+          className="text-[10px] sm:text-xs uppercase tracking-wider text-primary hover:text-primary-hover font-semibold border-b border-primary/40 pb-0.5"
         >
-          Voir la collection
+          Voir Tout
         </Link>
       </div>
 
@@ -53,7 +54,7 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="animate-pulse space-y-2">
-              <div className="aspect-[4/5] bg-muted rounded-xl" />
+              <div className="aspect-[4/5] bg-muted rounded-2xl" />
               <div className="h-3 w-20 bg-muted rounded" />
               <div className="h-4 w-32 bg-muted rounded" />
             </div>
@@ -66,7 +67,7 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
               key={p.id}
               to={`/parfum/${p.id}`}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="group block bg-card/40 border border-border/60 rounded-2xl p-3 transition-all hover:border-primary/50 hover:shadow-md"
+              className="group block rounded-2xl p-2 sm:p-3 transition-all hover:bg-card/40 relative text-left"
             >
               <ProductImage
                 src={p.image_url}
@@ -83,7 +84,7 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
                 {p.name}
               </h3>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
-                <span className="text-xs font-semibold text-primary font-mono">
+                <span className="text-xs font-serif font-bold text-primary">
                   À partir de {formatMAD(p.price_5ml)}
                 </span>
                 <span className="text-[9px] uppercase tracking-wider text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full border border-border/50">

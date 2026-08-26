@@ -15,6 +15,7 @@ import ParfumDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import ServiceClient from "./pages/about/CustomerCare";
+import AboutTabat from "./pages/About";
 import AdminLogin from "./admin/AdminLogin";
 import AdminGuard from "./admin/AdminGuard";
 import AdminLayout from "./admin/AdminLayout";
@@ -46,6 +47,8 @@ const App = () => (
               <Route path="/collection/:collection" element={<Collection />} />
               <Route path="/parfum/:parfumId" element={<ParfumDetail />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/about" element={<AboutTabat />} />
+              <Route path="/about/notre-histoire" element={<AboutTabat />} />
               <Route path="/about/service-client" element={<ServiceClient />} />
 
               {/* Admin */}

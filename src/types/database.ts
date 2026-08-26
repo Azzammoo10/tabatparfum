@@ -36,13 +36,15 @@ export type Parfum = {
 };
 
 export type OrderItem = {
-  parfum_id: string;
-  parfum_name: string;
-  maison: string;
-  size: Size;
+  parfum_id?: string;
+  parfum_name?: string;
+  name?: string;
+  maison?: string;
+  size?: Size | string;
   quantity: number;
-  unit_price: number;
-  subtotal: number;
+  unit_price?: number;
+  price?: number;
+  subtotal?: number;
 };
 
 export type Order = {

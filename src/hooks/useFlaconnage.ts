@@ -12,7 +12,8 @@ export type FlaconRow = {
 export type FlaconStats = {
   size: Size;
   label: string;
-  stock: number;
+  initialStock: number;
+  stock: number; // net remaining available = initialStock - used
   used: number;
   low_threshold: number;
   isLow: boolean;
@@ -23,6 +24,17 @@ const LABELS: Record<Size, string> = {
   "10ml": "Flacons 10ml",
   "20ml": "Flacons 20ml",
   full: "Bouteilles complètes",
+};
+
+/** Normalize format size string (e.g. "10 ML", "10ml", "5 ml") to strict Size key */
+const normalizeSize = (rawSize?: string): Size | null => {
+  if (!rawSize) return null;
+  const s = rawSize.toLowerCase().replace(/\s+/g, "");
+  if (s.includes("5ml")) return "5ml";
+  if (s.includes("10ml")) return "10ml";
+  if (s.includes("20ml")) return "20ml";
+  if (s.includes("full") || s.includes("bouteille")) return "full";
+  return null;
 };
 
 export const useFlaconnage = () => {
@@ -46,9 +58,13 @@ export const useFlaconnage = () => {
       (ordersRes.data ?? []).forEach((o) => {
         const items = (o.items ?? []) as OrderItem[];
         items.forEach((it) => {
-          if (it.size in acc) acc[it.size] += it.quantity;
+          const key = normalizeSize(it.size);
+          if (key && key in acc) {
+            acc[key] += Number(it.quantity || 1);
+          }
         });
       });
+
       setRows((flaconRes.data ?? []) as FlaconRow[]);
       setUsed(acc);
     } catch (e) {
@@ -69,14 +85,20 @@ export const useFlaconnage = () => {
     return { ok: true };
   };
 
-  const stats: FlaconStats[] = rows.map((r) => ({
-    size: r.size,
-    label: LABELS[r.size] ?? r.size,
-    stock: r.stock,
-    used: used[r.size] ?? 0,
-    low_threshold: r.low_threshold,
-    isLow: r.stock <= r.low_threshold,
-  }));
+  const stats: FlaconStats[] = rows.map((r) => {
+    const usedQty = used[r.size] ?? 0;
+    const remainingStock = Math.max(0, r.stock - usedQty);
+
+    return {
+      size: r.size,
+      label: LABELS[r.size] ?? r.size,
+      initialStock: r.stock,
+      stock: remainingStock,
+      used: usedQty,
+      low_threshold: r.low_threshold,
+      isLow: remainingStock <= r.low_threshold,
+    };
+  });
 
   return { stats, loading, error, refetch: load, update };
 };

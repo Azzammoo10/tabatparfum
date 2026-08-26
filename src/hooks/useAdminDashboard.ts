@@ -35,8 +35,8 @@ export const useDashboardKPIs = () => {
           await Promise.all([
             supabase.from("parfums").select("id", { count: "exact", head: true }).eq("is_active", true),
             supabase.from("parfums").select("id", { count: "exact", head: true }).eq("stock_status", "rupture"),
-            supabase.from("orders").select("total_amount, created_at").gte("created_at", thisStart),
-            supabase.from("orders").select("total_amount").gte("created_at", lastStart).lt("created_at", lastEnd),
+            supabase.from("orders").select("total_amount, created_at").neq("status", "annulee").gte("created_at", thisStart),
+            supabase.from("orders").select("total_amount").neq("status", "annulee").gte("created_at", lastStart).lt("created_at", lastEnd),
             supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "en_attente"),
             supabase.from("customers").select("id", { count: "exact", head: true }),
             supabase.from("customers").select("id", { count: "exact", head: true }).gte("created_at", thisStart),
@@ -89,6 +89,7 @@ export const useRevenueChart = () => {
       const { data: rows, error: err } = await supabase
         .from("orders")
         .select("total_amount, created_at")
+        .neq("status", "annulee")
         .gte("created_at", start.toISOString());
       if (!alive) return;
       if (err) {
@@ -104,7 +105,7 @@ export const useRevenueChart = () => {
       (rows ?? []).forEach((r) => {
         const d = new Date(r.created_at);
         const k = `${d.getFullYear()}-${d.getMonth()}`;
-        buckets.set(k, (buckets.get(k) ?? 0) + Number(r.total_amount));
+        buckets.set(k, (buckets.get(k) ?? 0) + Number(r.total_amount || 0));
       });
       const points: RevenuePoint[] = Array.from(buckets.entries()).map(([k, v]) => {
         const [, m] = k.split("-").map(Number);
@@ -133,35 +134,50 @@ export const useTopProducts = () => {
     (async () => {
       setLoading(true);
       setError(null);
-      const { data: rows, error: err } = await supabase.from("orders").select("items");
+      const { data: rows, error: err } = await supabase
+        .from("orders")
+        .select("items")
+        .neq("status", "annulee");
+
       if (!alive) return;
       if (err) {
         setError(err.message);
         setLoading(false);
         return;
       }
+
       const agg = new Map<string, TopProduct>();
       (rows ?? []).forEach((r) => {
-        const items = (r.items ?? []) as OrderItem[];
+        const items = (r.items ?? []) as (OrderItem & { name?: string; price?: number })[];
         items.forEach((it) => {
-          const key = `${it.parfum_id}|${it.size}`;
+          const parfumName = it.parfum_name || it.name || "Parfum TABAT";
+          const sizeStr = it.size || "10ml";
+          const qty = Number(it.quantity || 1);
+
+          // Calculate line total accurately without resulting in NaN
+          const itemPrice = Number(it.price || it.unit_price || 0);
+          const lineTotal = Number(it.subtotal ?? (itemPrice * qty));
+
+          const key = `${parfumName}|${sizeStr}`;
           const cur = agg.get(key);
           if (cur) {
-            cur.qty += it.quantity;
-            cur.revenue += it.subtotal;
+            cur.qty += qty;
+            cur.revenue += lineTotal;
           } else {
             agg.set(key, {
-              parfum_name: it.parfum_name,
-              size: it.size,
-              qty: it.quantity,
-              revenue: it.subtotal,
+              parfum_name: parfumName,
+              size: sizeStr,
+              qty: qty,
+              revenue: lineTotal,
             });
           }
         });
       });
+
       setData(Array.from(agg.values()).sort((a, b) => b.qty - a.qty).slice(0, 5));
       setLoading(false);
     })();
+
     return () => {
       alive = false;
     };

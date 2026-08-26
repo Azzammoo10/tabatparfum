@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   price: number;       // unit price in MAD for this size
   imageLabel: string;
+  imageUrl?: string | null;
 }
 
 interface CartContextValue {

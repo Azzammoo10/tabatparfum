@@ -14,14 +14,16 @@ const desktopNavLeft = [
 
 const desktopNavRight = [
   { name: "Déodorants Stick", href: "/collection/deodorants-stick" },
+  { name: "À Propos", href: "/about" },
   { name: "Les Packs", href: "/collection/packs", isGold: true },
 ];
 
 const mobileNavLinks = [
-  { name: "Toute la Collection", href: "/collection/all", sub: "Toutes nos fragrances d'exception", isGold: true },
+  { name: "Les Packs Premium", href: "/collection/packs", sub: "Offres & coffrets exclusifs", isGold: true },
   { name: "Parfums Homme", href: "/collection/homme", sub: "Fragrances masculines & élégantes" },
   { name: "Parfums Femme", href: "/collection/femme", sub: "Sillages féminins & envoûtants" },
   { name: "Déodorants Stick", href: "/collection/deodorants-stick", sub: "Protection fraîcheur 48h" },
+  { name: "À Propos de TABAT", href: "/about", sub: "Notre histoire, vision & engagements" },
 ];
 
 const Navigation = () => {

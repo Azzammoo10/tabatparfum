@@ -3,22 +3,22 @@ import autoTable from "jspdf-autotable";
 import type { Order, OrderItem } from "@/types/database";
 
 /* ------------------------------------------------------------------ */
-/* Noiressence brand palette (print-friendly variants)                */
+/* TABAT luxury brand palette (print-friendly)                        */
 /* ------------------------------------------------------------------ */
 const BRAND = {
-  cream:      [251, 247, 241] as [number, number, number], // paper
-  creamSoft:  [245, 236, 222] as [number, number, number], // row tint
-  ink:        [26,  18,  14 ] as [number, number, number], // #1A120E
-  inkSoft:    [58,  42,  34 ] as [number, number, number], // #3A2A22
-  gold:       [188, 157, 69 ] as [number, number, number], // #BC9D45
-  goldDeep:   [148, 122, 50 ] as [number, number, number],
-  muted:      [120, 104, 90 ] as [number, number, number],
-  rule:       [205, 188, 158] as [number, number, number],
+  paper:      [253, 251, 248] as [number, number, number],
+  cardBg:     [246, 241, 234] as [number, number, number],
+  ink:        [20,  14,  10  ] as [number, number, number], // #140E0A deep obsidian
+  inkSoft:    [60,  45,  35  ] as [number, number, number],
+  gold:       [216, 176, 67  ] as [number, number, number], // #D8B043 luxury gold
+  goldDeep:   [170, 135, 45  ] as [number, number, number],
+  muted:      [130, 115, 100 ] as [number, number, number],
+  rule:       [220, 205, 185] as [number, number, number],
 };
 
 const BRAND_NAME = "TABAT";
-const BRAND_TAGLINE = "Parfums & Déodorants Premium au Maroc";
-const BRAND_CONTACT = "tabatperfume.com  ·  contact@tabatperfume.com";
+const BRAND_TAGLINE = "Maison de Haute Parfumerie & Décantation au Maroc";
+const BRAND_CONTACT = "www.tabatperfume.com  ·  +212 6 63 84 80 99";
 
 const STATUS_LABEL: Record<string, string> = {
   en_attente: "En attente",
@@ -31,122 +31,186 @@ const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 
 const money = (n: number) => {
-  // Use plain ASCII space (Helvetica in jsPDF mis-renders U+202F narrow nbsp)
-  const formatted = Number(n)
+  const formatted = Number(n || 0)
     .toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     .replace(/[\u00A0\u202F\s]/g, " ");
   return `${formatted} MAD`;
 };
 
+/** Utility to convert image URL to PNG base64 for jsPDF rendering */
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = url;
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || 200;
+        canvas.height = img.naturalHeight || 200;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+          return;
+        }
+      } catch (e) {
+        console.warn("Canvas conversion warning:", e);
+      }
+      resolve(null);
+    };
+    img.onerror = () => resolve(null);
+  });
+}
+
 /* ------------------------------------------------------------------ */
-/* PDF builder                                                         */
+/* Professional Luxury TABAT Invoice Builder                          */
 /* ------------------------------------------------------------------ */
-export function buildInvoicePdf(order: Order): jsPDF {
+export async function buildInvoicePdf(order: Order): Promise<jsPDF> {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const M = 48;
+  const M = 45;
 
-  /* Cream paper background */
-  doc.setFillColor(...BRAND.cream);
+  // Pre-load TABAT logo and product item images
+  const logoBase64 = await loadImageAsBase64("/logo.svg");
+
+  /* Paper background */
+  doc.setFillColor(...BRAND.paper);
   doc.rect(0, 0, pageW, pageH, "F");
 
-  /* Gold top bar */
+  /* Luxury Gold top bar */
   doc.setFillColor(...BRAND.gold);
   doc.rect(0, 0, pageW, 6, "F");
 
-  /* ---------------- Header ---------------- */
-  // Wordmark — tracked-out serif caps
+  /* ---------------- HEADER SECTION ---------------- */
+  const headerY = 40;
+
+  // Render TABAT Logo if available
+  if (logoBase64) {
+    try {
+      doc.setFillColor(...BRAND.ink);
+      doc.roundedRect(M, headerY, 44, 44, 8, 8, "F");
+      doc.addImage(logoBase64, "PNG", M + 6, headerY + 6, 32, 32);
+    } catch {
+      // Fallback
+    }
+  }
+
+  const titleX = logoBase64 ? M + 56 : M;
   doc.setFont("times", "bold");
-  doc.setFontSize(26);
+  doc.setFontSize(24);
   doc.setTextColor(...BRAND.ink);
-  doc.setCharSpace(6);
-  doc.text(BRAND_NAME, M, 70);
-  doc.setCharSpace(0);
+  doc.text(BRAND_NAME, titleX, headerY + 22);
 
-  // Tagline
   doc.setFont("times", "italic");
-  doc.setFontSize(9.5);
+  doc.setFontSize(9);
   doc.setTextColor(...BRAND.muted);
-  doc.text(BRAND_TAGLINE, M, 88);
+  doc.text(BRAND_TAGLINE, titleX, headerY + 36);
 
-  // Right side — "FACTURE" gold caps
-  doc.setFont("times", "bold");
-  doc.setFontSize(11);
+  // Right Header: FACTURE
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
   doc.setTextColor(...BRAND.gold);
-  doc.setCharSpace(4);
-  doc.text("FACTURE", pageW - M, 60, { align: "right" });
-  doc.setCharSpace(0);
+  doc.text("FACTURE", pageW - M, headerY + 20, { align: "right" });
 
-  // Invoice meta (right column) — labels left-aligned, values right-aligned
+  // Invoice metadata
   const metaRight = pageW - M;
-  const metaLeft = metaRight - 200;
+  const metaLeft = metaRight - 180;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(...BRAND.muted);
-  doc.text("N° DE FACTURE", metaLeft, 76);
-  doc.text("DATE D'ÉMISSION", metaLeft, 92);
-  doc.text("STATUT", metaLeft, 108);
+  doc.text("N° de Facture :", metaLeft, headerY + 36);
+  doc.text("Date :", metaLeft, headerY + 50);
+  doc.text("Statut :", metaLeft, headerY + 64);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(...BRAND.ink);
-  doc.text(order.order_number, metaRight, 76, { align: "right" });
-  doc.text(formatDate(order.created_at), metaRight, 92, { align: "right" });
-  doc.text(STATUS_LABEL[order.status] || order.status, metaRight, 108, { align: "right" });
+  doc.text(order.order_number, metaRight, headerY + 36, { align: "right" });
+  doc.text(formatDate(order.created_at), metaRight, headerY + 50, { align: "right" });
+  doc.text(STATUS_LABEL[order.status] || order.status, metaRight, headerY + 64, { align: "right" });
 
-  /* Hairline gold divider */
+  /* Gold Divider Line */
+  const lineY = headerY + 78;
   doc.setDrawColor(...BRAND.gold);
-  doc.setLineWidth(0.6);
-  doc.line(M, 128, pageW - M, 128);
+  doc.setLineWidth(0.8);
+  doc.line(M, lineY, pageW - M, lineY);
 
-  /* ---------------- Billed To ---------------- */
-  let y = 158;
+  /* ---------------- CLIENT INFO SECTION ---------------- */
+  let clientY = lineY + 24;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...BRAND.gold);
-  doc.setCharSpace(2);
-  doc.text("FACTURÉ À", M, y);
-  doc.setCharSpace(0);
+  doc.text("INFORMATIONS CLIENT", M, clientY);
 
-  y += 18;
+  clientY += 16;
   doc.setFont("times", "bold");
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setTextColor(...BRAND.ink);
-  doc.text(order.customer_name, M, y);
+  doc.text(order.customer_name, M, clientY);
 
-  y += 16;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...BRAND.inkSoft);
-  doc.text(order.customer_email, M, y);
-  if (order.customer_phone) { y += 13; doc.text(order.customer_phone, M, y); }
-  if (order.customer_address) {
-    y += 13;
-    const lines = doc.splitTextToSize(order.customer_address, 260);
-    doc.text(lines, M, y);
-    y += lines.length * 12;
+  if (order.customer_phone) {
+    clientY += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.inkSoft);
+    doc.text(`Tél : ${order.customer_phone}`, M, clientY);
   }
 
-  /* ---------------- Items table ---------------- */
-  const rows = order.items.map((it: OrderItem) => [
-    { content: it.parfum_name, styles: { fontStyle: "bold" as const, textColor: BRAND.ink } },
-    it.maison ?? "—",
-    it.size,
-    String(it.quantity),
-    money(it.unit_price),
-    money(it.subtotal),
-  ]);
+  if (order.customer_address) {
+    clientY += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.inkSoft);
+    const addrLines = doc.splitTextToSize(`Adresse : ${order.customer_address}`, 320);
+    doc.text(addrLines, M, clientY);
+    clientY += (addrLines.length - 1) * 12;
+  }
+
+  // Only display email if a REAL non-dummy email was provided
+  if (
+    order.customer_email &&
+    order.customer_email.includes("@") &&
+    !order.customer_email.endsWith("@client.tabat.ma") &&
+    !order.customer_email.endsWith("@tabat.ma")
+  ) {
+    clientY += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.inkSoft);
+    doc.text(`Email : ${order.customer_email}`, M, clientY);
+  }
+
+  /* ---------------- ITEMS TABLE SECTION ---------------- */
+  const rows = (order.items || []).map((it: OrderItem) => {
+    const rawName = it.parfum_name || it.name || "Parfum TABAT";
+    const maisonStr = it.maison ? ` (${it.maison})` : "";
+    const fullName = `${rawName}${maisonStr}`;
+    const unitPrice = it.unit_price || it.price || 0;
+    const lineTotal = it.subtotal || (it.price ? it.price * it.quantity : 0);
+
+    return [
+      fullName,
+      it.size || "10ml",
+      String(it.quantity),
+      money(unitPrice),
+      money(lineTotal),
+    ];
+  });
+
+  const tableStartY = Math.max(clientY + 24, 230);
 
   autoTable(doc, {
-    startY: Math.max(y + 28, 252),
-    head: [["Produit", "Maison", "Format", "Qté", "Prix unitaire", "Sous-total"]],
+    startY: tableStartY,
+    head: [["Produit", "Format", "Qté", "Prix Unit.", "Total"]],
     body: rows,
     theme: "plain",
     styles: {
       font: "helvetica",
-      fontSize: 9.5,
-      cellPadding: { top: 10, right: 8, bottom: 10, left: 8 },
+      fontSize: 9,
+      cellPadding: { top: 9, right: 8, bottom: 9, left: 8 },
       textColor: BRAND.inkSoft,
       lineColor: BRAND.rule,
       lineWidth: 0,
@@ -156,20 +220,18 @@ export function buildInvoicePdf(order: Order): jsPDF {
       textColor: BRAND.gold,
       fontStyle: "bold",
       fontSize: 8.5,
-      cellPadding: { top: 10, right: 8, bottom: 10, left: 8 },
+      cellPadding: { top: 9, right: 8, bottom: 9, left: 8 },
     },
-    alternateRowStyles: { fillColor: BRAND.creamSoft },
+    alternateRowStyles: { fillColor: BRAND.cardBg },
     columnStyles: {
-      0: { cellWidth: 150 },
-      1: { textColor: BRAND.muted, fontStyle: "italic" },
-      2: { halign: "center" },
-      3: { halign: "center" },
-      4: { halign: "right" },
-      5: { halign: "right", fontStyle: "bold", textColor: BRAND.ink },
+      0: { cellWidth: 230, fontStyle: "bold", textColor: BRAND.ink },
+      1: { halign: "center", cellWidth: 65 },
+      2: { halign: "center", cellWidth: 45 },
+      3: { halign: "right", cellWidth: 80 },
+      4: { halign: "right", cellWidth: 85, fontStyle: "bold", textColor: BRAND.ink },
     },
     margin: { left: M, right: M },
     didDrawCell: (data) => {
-      // Bottom hairline rule under each body row
       if (data.section === "body") {
         const { x, y, width, height } = data.cell;
         doc.setDrawColor(...BRAND.rule);
@@ -180,90 +242,83 @@ export function buildInvoicePdf(order: Order): jsPDF {
   });
 
   // @ts-expect-error lastAutoTable is injected by jspdf-autotable
-  const tableEndY: number = doc.lastAutoTable.finalY;
+  const tableEndY: number = doc.lastAutoTable.finalY || tableStartY + 60;
 
-  /* ---------------- Totals block ---------------- */
-  const totalsX = pageW - M;
-  const labelX = totalsX - 160;
-  let ty = tableEndY + 28;
+  /* ---------------- TOTALS SUMMARY BOX (CLEANLY ALIGNED) ---------------- */
+  const boxW = 240;
+  const boxX = pageW - M - boxW;
+  const ty = tableEndY + 20;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...BRAND.muted);
-  doc.text("Sous-total", labelX, ty);
-  doc.setTextColor(...BRAND.ink);
-  doc.text(money(order.total_amount), totalsX, ty, { align: "right" });
-
-  ty += 16;
-  doc.setTextColor(...BRAND.muted);
-  doc.text("Livraison", labelX, ty);
-  doc.setTextColor(...BRAND.ink);
-  doc.text("Offerte", totalsX, ty, { align: "right" });
-
-  // Gold rule above total
-  ty += 14;
+  // Background Box
+  doc.setFillColor(...BRAND.cardBg);
+  doc.roundedRect(boxX, ty, boxW, 76, 6, 6, "F");
   doc.setDrawColor(...BRAND.gold);
   doc.setLineWidth(0.8);
-  doc.line(labelX, ty, totalsX, ty);
+  doc.roundedRect(boxX, ty, boxW, 76, 6, 6, "S");
 
-  ty += 22;
-  doc.setFont("times", "bold");
-  doc.setFontSize(13);
+  // Row 1: Sous-total
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.muted);
+  doc.text("Sous-total :", boxX + 14, ty + 20);
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...BRAND.ink);
-  doc.setCharSpace(2);
-  doc.text("TOTAL", labelX, ty);
-  doc.setCharSpace(0);
+  doc.text(money(order.total_amount), boxX + boxW - 14, ty + 20, { align: "right" });
+
+  // Row 2: Livraison
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.muted);
+  doc.text("Livraison Express Maroc :", boxX + 14, ty + 36);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...BRAND.ink);
+  doc.text("Gratuite", boxX + boxW - 14, ty + 36, { align: "right" });
+
+  // Divider line
+  doc.setDrawColor(...BRAND.rule);
+  doc.setLineWidth(0.5);
+  doc.line(boxX + 10, ty + 46, boxX + boxW - 10, ty + 46);
+
+  // Row 3: Total à Payer
+  doc.setFont("times", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...BRAND.ink);
+  doc.text("TOTAL À PAYER", boxX + 14, ty + 62);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
   doc.setTextColor(...BRAND.goldDeep);
-  doc.setFontSize(15);
-  doc.text(money(order.total_amount), totalsX, ty, { align: "right" });
+  doc.text(money(order.total_amount), boxX + boxW - 14, ty + 62, { align: "right" });
 
-  /* ---------------- Notes ---------------- */
-  if (order.notes) {
-    const ny = ty + 36;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...BRAND.gold);
-    doc.setCharSpace(2);
-    doc.text("NOTES", M, ny);
-    doc.setCharSpace(0);
-    doc.setFont("times", "italic");
-    doc.setFontSize(10);
-    doc.setTextColor(...BRAND.inkSoft);
-    const notes = doc.splitTextToSize(order.notes, pageW - 2 * M);
-    doc.text(notes, M, ny + 16);
-  }
-
-  /* ---------------- Footer ---------------- */
-  const fy = pageH - 56;
+  /* ---------------- FOOTER SECTION ---------------- */
+  const fy = pageH - 50;
   doc.setDrawColor(...BRAND.gold);
-  doc.setLineWidth(0.4);
+  doc.setLineWidth(0.5);
   doc.line(M, fy, pageW - M, fy);
 
   doc.setFont("times", "italic");
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.setTextColor(...BRAND.ink);
-  doc.text("Merci pour votre confiance.", pageW / 2, fy + 18, { align: "center" });
+  doc.text("Merci pour votre confiance en la Maison TABAT.", pageW / 2, fy + 16, { align: "center" });
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...BRAND.muted);
-  doc.setCharSpace(1.5);
-  doc.text(BRAND_CONTACT, pageW / 2, fy + 32, { align: "center" });
-  doc.setCharSpace(0);
+  doc.text(BRAND_CONTACT, pageW / 2, fy + 30, { align: "center" });
 
-  // Gold bottom bar
+  /* Bottom Gold Line */
   doc.setFillColor(...BRAND.gold);
   doc.rect(0, pageH - 4, pageW, 4, "F");
 
   return doc;
 }
 
-export function downloadInvoice(order: Order) {
-  const doc = buildInvoicePdf(order);
-  doc.save(`Myaura-Facture-${order.order_number}.pdf`);
+export async function downloadInvoice(order: Order) {
+  const doc = await buildInvoicePdf(order);
+  doc.save(`TABAT-Facture-${order.order_number}.pdf`);
 }
 
-/** Normalize phone for wa.me: digits only, default to Morocco (+212) if local. */
+/** Normalize phone for wa.me */
 export function normalizeWhatsappNumber(raw: string | null | undefined): string | null {
   if (!raw) return null;
   let p = raw.replace(/\D/g, "");
@@ -273,16 +328,16 @@ export function normalizeWhatsappNumber(raw: string | null | undefined): string 
   return p;
 }
 
-export function sendInvoiceViaWhatsapp(order: Order) {
-  downloadInvoice(order);
+export async function sendInvoiceViaWhatsapp(order: Order) {
+  await downloadInvoice(order);
 
   const phone = normalizeWhatsappNumber(order.customer_phone);
   const message =
     `Bonjour ${order.customer_name},\n\n` +
-    `Voici votre facture Myaura n° ${order.order_number} ` +
+    `Voici votre facture TABAT n° ${order.order_number} ` +
     `d'un montant de ${money(order.total_amount)}.\n\n` +
-    `Le PDF de la facture vient d'être téléchargé — merci de le joindre à ce message.\n\n` +
-    `À très vite,\nMyaura`;
+    `Le PDF de la facture vient d'être téléchargé sur votre appareil.\n\n` +
+    `À très bientôt,\nL'équipe TABAT`;
 
   const url = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`

@@ -22,30 +22,25 @@ const AdminLogin = () => {
     setSubmitting(true);
     
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (!err) {
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (err) {
+        console.error("Supabase Auth error:", err);
+        setError(err.message === "Invalid login credentials" ? "Email ou mot de passe Supabase incorrect." : err.message);
         setSubmitting(false);
-        navigate("/admin", { replace: true });
         return;
       }
-    } catch {
-      // ignore
-    }
 
-    // Fallback admin login for demo / local management
-    const cleanEmail = email.trim().toLowerCase();
-    if (
-      (cleanEmail === "admin@tabatperfume.com" || cleanEmail === "admin@tabat.ma" || cleanEmail === "admin" || cleanEmail === "azzam.moo10@gmail.com") &&
-      (password === "admin" || password === "admin123" || password === "tabat2026" || password.length >= 4)
-    ) {
-      localStorage.setItem("tabat_admin_session", JSON.stringify({ user: { email: cleanEmail }, time: Date.now() }));
       setSubmitting(false);
       navigate("/admin", { replace: true });
-      return;
+    } catch (err) {
+      setSubmitting(false);
+      const msg = err instanceof Error ? err.message : "Erreur lors de la connexion.";
+      setError(msg);
     }
-
-    setSubmitting(false);
-    setError("Identifiants incorrects. Essayez avec admin@tabatperfume.com / admin");
   };
 
   return (
@@ -55,9 +50,7 @@ const AdminLogin = () => {
         className="w-full max-w-md bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-lg border border-[#E5E7EB] dark:border-[#2A2A2A] shadow-sm p-8 space-y-6"
       >
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="w-12 h-12 rounded-full bg-[#111827] dark:bg-[#C9A96E] flex items-center justify-center">
-            <Lock className="w-5 h-5 text-white dark:text-[#111827]" />
-          </div>
+          <img src="/logo.png" alt="TABAT Logo" className="h-12 w-auto object-contain dark:invert mb-1" />
           <h1 className="text-2xl font-medium text-[#111827] dark:text-[#F9FAFB]">Admin · TABAT</h1>
           <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
             Connectez-vous pour accéder au panneau.

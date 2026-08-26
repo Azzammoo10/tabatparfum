@@ -15,9 +15,17 @@
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Tabat | Parfums & Déodorants Premium au Maroc</title>
     <meta name="description" content="Découvrez les parfums homme, parfums femme, déodorants stick et packs premium Tabat. Des fragrances élégantes et des soins de qualité, livraison rapide au Maroc et paiement à la livraison." />
     <meta name="author" content="Tabat" />
+
+    <!-- TABAT OFFICIAL LOGO FAVICON FOR BROWSER TAB -->
+    <link rel="shortcut icon" href="/logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/x-icon" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,10 +35,12 @@
     <meta property="og:site_name" content="Tabat" />
     <meta property="og:title" content="Tabat | Parfums & Déodorants Premium au Maroc" />
     <meta property="og:description" content="Découvrez les parfums homme, parfums femme, déodorants stick et packs premium Tabat." />
+    <meta property="og:image" content="/logo.png" />
     <meta property="og:url" content="/" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Tabat | Parfums & Déodorants Premium" />
     <meta name="twitter:description" content="Des fragrances élégantes et soins de qualité au Maroc." />
+    <meta name="twitter:image" content="/logo.png" />
 
     <script type="application/ld+json">
       {
@@ -38,6 +48,7 @@
         "@type": "Organization",
         "name": "Tabat",
         "url": "/",
+        "logo": "/logo.png",
         "description": "Maison marocaine de parfums et soins premium 100% authentiques."
       }
     </script>

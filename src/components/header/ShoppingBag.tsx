@@ -45,10 +45,18 @@ const ShoppingBag = ({ isOpen, onClose }: ShoppingBagProps) => {
               <div className="flex-1 overflow-y-auto space-y-6 mb-6">
                 {items.map((item) => (
                   <div key={`${item.id}-${item.size}`} className="flex gap-4">
-                    <div className="w-20 h-20 bg-muted border border-border flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-mono text-primary/70 text-center px-1 break-all">
-                        {item.imageLabel}
-                      </span>
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-card border border-border/80 rounded-xl p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-multiply"
+                        />
+                      ) : (
+                        <span className="text-[9px] font-mono text-primary/70 text-center px-1 break-all">
+                          {item.imageLabel}
+                        </span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2 mb-1">
@@ -63,7 +71,7 @@ const ShoppingBag = ({ isOpen, onClose }: ShoppingBagProps) => {
                             {SIZE_META[item.size].label} — {SIZE_META[item.size].sub}
                           </p>
                         </div>
-                        <p className="text-sm font-light text-foreground whitespace-nowrap">
+                        <p className="text-sm font-serif font-bold text-foreground whitespace-nowrap">
                           {formatMAD(item.price * item.quantity)}
                         </p>
                       </div>
@@ -94,7 +102,7 @@ const ShoppingBag = ({ isOpen, onClose }: ShoppingBagProps) => {
               <div className="border-t border-border pt-6 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-light text-foreground">Sous-total</span>
-                  <span className="text-base font-medium text-primary">{formatMAD(subtotal)}</span>
+                  <span className="text-base font-serif font-bold text-primary">{formatMAD(subtotal)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground font-light">
                   Livraison calculée à l'étape suivante.

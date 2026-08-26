@@ -50,7 +50,6 @@ const AdminLayout = () => {
   const title = TITLES[location.pathname] || "Admin";
 
   const logout = () => {
-    localStorage.removeItem("tabat_admin_session");
     supabase.auth.signOut();
     navigate("/admin/login", { replace: true });
   };
@@ -58,9 +57,9 @@ const AdminLayout = () => {
   // Sidebar uses fixed dark palette in BOTH themes (per spec).
   const SidebarContent = (
     <div className="flex flex-col h-full bg-[#111827] text-[#F9FAFB]">
-      <div className="px-6 py-6 border-b border-white/5">
-        <div className="font-brand text-xl tracking-wide text-[#C9A96E]">TABAT</div>
-        <div className="text-xs text-white/50 mt-1">Admin Panel</div>
+      <div className="px-6 py-5 border-b border-white/5 flex flex-col items-center justify-center gap-1.5 text-center w-full">
+        <img src="/logo.png" alt="TABAT Logo" className="h-10 w-auto object-contain shrink-0 invert" />
+        <span className="text-[11px] text-[#C9A96E] tracking-widest uppercase font-semibold">Admin Panel</span>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {NAV.map((item) => (

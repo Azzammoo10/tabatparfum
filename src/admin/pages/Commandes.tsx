@@ -107,21 +107,24 @@ const Commandes = () => {
               {!loading && !error && orders.length === 0 && (
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">Aucune commande pour le moment.</td></tr>
               )}
-              {orders.map((o) => (
-                <tr key={o.id} className="border-t border-border align-top">
-                  <td className="px-4 py-3 font-medium text-foreground">{o.order_number}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-foreground">{o.customer_name}</div>
-                    <div className="text-xs text-muted-foreground">{o.customer_email}</div>
-                    {o.customer_phone && <div className="text-xs text-muted-foreground">{o.customer_phone}</div>}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground max-w-[280px]">{summarizeItems(o.items)}</td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">{Number(o.total_amount).toLocaleString("fr-FR")} MAD</td>
-                  <td className="px-4 py-3"><StatusSelect id={o.id} status={o.status} /></td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(o.created_at)}</td>
-                  <td className="px-4 py-3"><div className="flex justify-end"><Actions o={o} /></div></td>
-                </tr>
-              ))}
+              {orders.map((o) => {
+                const hasRealEmail = o.customer_email && o.customer_email.includes("@") && !o.customer_email.endsWith("@client.tabat.ma") && !o.customer_email.endsWith("@tabat.ma");
+                return (
+                  <tr key={o.id} className="border-t border-border align-top">
+                    <td className="px-4 py-3 font-medium text-foreground">{o.order_number}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-foreground">{o.customer_name}</div>
+                      {hasRealEmail && <div className="text-xs text-muted-foreground">{o.customer_email}</div>}
+                      {o.customer_phone && <div className="text-xs text-muted-foreground">{o.customer_phone}</div>}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[280px]">{summarizeItems(o.items)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{Number(o.total_amount).toLocaleString("fr-FR")} MAD</td>
+                    <td className="px-4 py-3"><StatusSelect id={o.id} status={o.status} /></td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(o.created_at)}</td>
+                    <td className="px-4 py-3"><div className="flex justify-end"><Actions o={o} /></div></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -134,20 +137,22 @@ const Commandes = () => {
         {!loading && !error && orders.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-10">Aucune commande pour le moment.</p>
         )}
-        {orders.map((o) => (
-          <div key={o.id} className="bg-card border border-border rounded-lg p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-medium text-foreground text-sm">{o.order_number}</div>
-                <div className="text-xs text-muted-foreground">{formatDate(o.created_at)}</div>
+        {orders.map((o) => {
+          const hasRealEmail = o.customer_email && o.customer_email.includes("@") && !o.customer_email.endsWith("@client.tabat.ma") && !o.customer_email.endsWith("@tabat.ma");
+          return (
+            <div key={o.id} className="bg-card border border-border rounded-lg p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground text-sm">{o.order_number}</div>
+                  <div className="text-xs text-muted-foreground">{formatDate(o.created_at)}</div>
+                </div>
+                <StatusSelect id={o.id} status={o.status} />
               </div>
-              <StatusSelect id={o.id} status={o.status} />
-            </div>
-            <div className="text-sm">
-              <div className="font-medium text-foreground truncate">{o.customer_name}</div>
-              <div className="text-xs text-muted-foreground truncate">{o.customer_email}</div>
-              {o.customer_phone && <div className="text-xs text-muted-foreground">{o.customer_phone}</div>}
-            </div>
+              <div className="text-sm">
+                <div className="font-medium text-foreground truncate">{o.customer_name}</div>
+                {hasRealEmail && <div className="text-xs text-muted-foreground truncate">{o.customer_email}</div>}
+                {o.customer_phone && <div className="text-xs text-muted-foreground">{o.customer_phone}</div>}
+              </div>
             <div className="text-xs text-muted-foreground border-t border-border pt-2">
               {summarizeItems(o.items)}
             </div>
@@ -157,7 +162,8 @@ const Commandes = () => {
             </div>
             <div className="flex justify-end pt-1 border-t border-border"><Actions o={o} /></div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

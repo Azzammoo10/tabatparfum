@@ -2,61 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Myaura — Dual-theme design system (dark default, light optional) */
+/* TABAT — Dual-theme luxury design system (dark default, light optional) */
 
 @layer base {
-  /* Dark warm palette (default) — derived from the light palette */
+  /* Dark warm luxury obsidian gold palette (default) */
   :root,
   .dark {
-    --background: 20 32% 8%;         /* #1A120E deep warm brown */
-    --foreground: 26 55% 91%;        /* #F3E7DD warm cream */
+    --background: 20 25% 6%;         /* #140E0A deep obsidian noir */
+    --foreground: 36 50% 94%;        /* #F7F0E8 radiant warm pearl cream */
 
-    --status-bar: 20 32% 6%;
-    --status-bar-foreground: 26 55% 91%;
+    --status-bar: 20 25% 5%;
+    --status-bar-foreground: 36 50% 94%;
 
-    --nav-background: 20 32% 8%;
-    --nav-foreground: 26 55% 91%;
-    --nav-hover: 45 47% 51%;
+    --nav-background: 20 25% 6%;
+    --nav-foreground: 36 50% 94%;
+    --nav-hover: 43 65% 55%;
 
-    --primary: 45 47% 51%;           /* #bc9d45 warm gold */
-    --primary-foreground: 20 32% 8%;
-    --primary-hover: 45 47% 45%;
+    --primary: 43 65% 55%;           /* #D8B043 luxury gold accent */
+    --primary-foreground: 20 25% 6%;
+    --primary-hover: 43 65% 48%;
 
-    --secondary: 20 32% 12%;         /* deep warm surface */
-    --secondary-foreground: 26 55% 91%;
+    --secondary: 20 25% 10%;         /* #1F1611 obsidian surface */
+    --secondary-foreground: 36 50% 94%;
 
-    --muted: 22 25% 18%;
-    --muted-foreground: 26 25% 75%;
+    --muted: 20 20% 14%;             /* #241A14 */
+    --muted-foreground: 26 20% 75%;
 
-    --accent: 357 29% 48%;           /* #9d575b muted red */
-    --accent-foreground: 26 55% 91%;
+    --accent: 357 35% 52%;
+    --accent-foreground: 36 50% 94%;
 
-    --border: 18 26% 22%;
-    --input: 18 26% 22%;
-    --ring: 45 47% 51%;
+    --border: 22 25% 18%;            /* #36271F border */
+    --input: 22 25% 18%;
+    --ring: 43 65% 55%;
 
-    --card: 22 30% 13%;              /* #2A1E17 */
-    --card-foreground: 26 55% 91%;
+    --card: 20 22% 11%;              /* #221813 luxury card */
+    --card-foreground: 36 50% 94%;
 
-    --popover: 22 30% 13%;
-    --popover-foreground: 26 55% 91%;
+    --popover: 20 22% 11%;
+    --popover-foreground: 36 50% 94%;
 
     --destructive: 357 45% 42%;
-    --destructive-foreground: 26 55% 91%;
+    --destructive-foreground: 36 50% 94%;
 
-    --radius: 0.25rem;
+    --radius: 0.5rem;
 
     --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-background: 20 32% 10%;
-    --sidebar-foreground: 26 55% 91%;
-    --sidebar-primary: 45 47% 51%;
-    --sidebar-primary-foreground: 20 32% 8%;
-    --sidebar-accent: 22 30% 13%;
-    --sidebar-accent-foreground: 26 55% 91%;
-    --sidebar-border: 18 26% 22%;
-    --sidebar-ring: 45 47% 51%;
+    --sidebar-background: 20 25% 8%;
+    --sidebar-foreground: 36 50% 94%;
+    --sidebar-primary: 43 65% 55%;
+    --sidebar-primary-foreground: 20 25% 6%;
+    --sidebar-accent: 20 22% 11%;
+    --sidebar-accent-foreground: 36 50% 94%;
+    --sidebar-border: 22 25% 18%;
+    --sidebar-ring: 43 65% 55%;
   }
 
   /* Warm soft light palette */
@@ -149,4 +149,37 @@
                 stroke 300ms ease !important;
     transition-delay: 0 !important;
   }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.08); }
+}
+
+.animate-float-slow {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes badgeGlow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(216, 176, 67, 0.4);
+    opacity: 0.95;
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(216, 176, 67, 0.7);
+    opacity: 1;
+  }
+}
+
+.animate-badge-glow {
+  animation: badgeGlow 3.5s ease-in-out infinite;
 }

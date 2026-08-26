@@ -14,28 +14,29 @@ export type Expense = {
 };
 
 export const EXPENSE_CATEGORIES = [
-  "Achat stock",
-  "Flaconnage",
-  "Livraison",
-  "Marketing",
-  "Frais bancaires",
-  "Salaires",
-  "Loyer",
+  "Achat Bouteilles Mères (Origine)",
+  "Achat Flacons Vides & Pipettes",
+  "Frais de Livraison & Emballages",
+  "Publicité & Marketing",
+  "Frais de Gestion & Logistique",
   "Autre",
 ] as const;
 
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
 export type FinanceKpis = {
-  revenueTotal: number;            // confirmee + livree all-time
+  revenueTotal: number;
   revenueThisMonth: number;
   revenueLastMonth: number;
-  refundsTotal: number;            // annulee all-time
+  refundsTotal: number;
   refundsThisMonth: number;
   expensesTotal: number;
   expensesThisMonth: number;
-  netProfit: number;               // revenueTotal - refundsTotal - expensesTotal
+  netProfit: number;
   netProfitThisMonth: number;
+  profitMarginPct: number;
+  profitMarginThisMonthPct: number;
+  stockAssetValue: number;
   ordersCount: number;
   ordersConfirmed: number;
   ordersDelivered: number;
@@ -49,6 +50,7 @@ const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", 
 
 export type MonthlyPoint = {
   month: string;
+  yearMonthKey: string;
   revenue: number;
   expenses: number;
   net: number;
@@ -73,9 +75,11 @@ export const useAdminFinances = () => {
       const lastStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
       const sixStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 5, 1));
 
-      const [ordersRes, expensesRes] = await Promise.all([
+      const [ordersRes, expensesRes, parfumsRes, flaconRes] = await Promise.all([
         supabase.from("orders").select("total_amount, status, items, created_at"),
         supabase.from("expenses").select("*").order("occurred_on", { ascending: false }),
+        supabase.from("parfums").select("price_5ml, price_10ml, full_bottle_price, full_bottle_stock, is_active"),
+        supabase.from("flaconnage").select("stock, size"),
       ]);
 
       if (ordersRes.error) throw ordersRes.error;
@@ -142,33 +146,58 @@ export const useAdminFinances = () => {
         }))
         .sort((a, b) => b.amount - a.amount);
 
-      // monthly buckets last 6 months
+      // Monthly buckets last 6 months
       const buckets = new Map<string, MonthlyPoint>();
       for (let i = 0; i < 6; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-        buckets.set(`${d.getFullYear()}-${d.getMonth()}`, {
-          month: MONTHS_FR[d.getMonth()],
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        buckets.set(key, {
+          month: `${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`,
+          yearMonthKey: key,
           revenue: 0,
           expenses: 0,
           net: 0,
         });
       }
+
       orders.forEach((o) => {
         if (!isRevenue(o.status)) return;
         const d = new Date(o.created_at);
         if (d < sixStart) return;
-        const k = `${d.getFullYear()}-${d.getMonth()}`;
-        const b = buckets.get(k);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const b = buckets.get(key);
         if (b) b.revenue += Number(o.total_amount);
       });
+
       exp.forEach((e) => {
         const d = new Date(e.occurred_on);
         if (d < sixStart) return;
-        const k = `${d.getFullYear()}-${d.getMonth()}`;
-        const b = buckets.get(k);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const b = buckets.get(key);
         if (b) b.expenses += Number(e.amount);
       });
+
       const points = Array.from(buckets.values()).map((b) => ({ ...b, net: b.revenue - b.expenses }));
+
+      // Estimate total stock asset value in MAD
+      let stockAssetValue = 0;
+      (parfumsRes.data ?? []).forEach((p) => {
+        if (p.is_active) {
+          const val5 = Number(p.price_5ml || 0) * 10;
+          const val10 = Number(p.price_10ml || 0) * 10;
+          const valFull = Number(p.full_bottle_price || 0) * Number(p.full_bottle_stock || 1);
+          stockAssetValue += val5 + val10 + valFull;
+        }
+      });
+      (flaconRes.data ?? []).forEach((f) => {
+        stockAssetValue += Number(f.stock || 0) * 5; // ~5 MAD per flacon bottle unit
+      });
+
+      const netProfit = revenueTotal - refundsTotal - expensesTotal;
+      const netProfitThisMonth = revenueThisMonth - refundsThisMonth - expensesThisMonth;
+
+      const profitMarginPct = revenueTotal > 0 ? (netProfit / revenueTotal) * 100 : 0;
+      const profitMarginThisMonthPct = revenueThisMonth > 0 ? (netProfitThisMonth / revenueThisMonth) * 100 : 0;
 
       const ordersForRevenue = ordersConfirmed + ordersDelivered;
       const computedKpis: FinanceKpis = {
@@ -179,8 +208,11 @@ export const useAdminFinances = () => {
         refundsThisMonth,
         expensesTotal,
         expensesThisMonth,
-        netProfit: revenueTotal - refundsTotal - expensesTotal,
-        netProfitThisMonth: revenueThisMonth - refundsThisMonth - expensesThisMonth,
+        netProfit,
+        netProfitThisMonth,
+        profitMarginPct,
+        profitMarginThisMonthPct,
+        stockAssetValue,
         ordersCount: orders.length,
         ordersConfirmed,
         ordersDelivered,

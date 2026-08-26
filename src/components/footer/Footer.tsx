@@ -63,12 +63,20 @@ const Footer = () => {
               Assistance & Engagements
             </h4>
             <div className="space-y-3.5 text-xs sm:text-sm font-light text-muted-foreground">
-              <Link
-                to="/about/service-client"
-                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary-hover transition-colors mb-1"
-              >
-                <MessageSquare className="w-4 h-4" /> Service Client & Contact
-              </Link>
+              <div className="flex flex-col gap-1.5 mb-2">
+                <Link
+                  to="/about"
+                  className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary-hover transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" /> À Propos de TABAT
+                </Link>
+                <Link
+                  to="/about/service-client"
+                  className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary-hover transition-colors"
+                >
+                  <MessageSquare className="w-4 h-4" /> Service Client & Contact
+                </Link>
+              </div>
 
               <div className="flex items-start gap-2.5 pt-2">
                 <Truck className="w-4 h-4 text-primary shrink-0 mt-0.5" />

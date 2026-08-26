@@ -42,7 +42,7 @@ const ProductCarousel = () => {
               </p>
               <h3 className="font-serif text-sm sm:text-lg text-foreground mt-0.5 sm:mt-1 truncate font-medium">{p.name}</h3>
               <div className="flex items-center justify-between mt-2 pt-1 border-t sm:border-t-0 border-border/30">
-                <span className="text-[11px] sm:text-xs font-light text-foreground/80">
+                <span className="text-xs sm:text-sm font-serif font-semibold text-primary">
                   À partir de {formatMAD(p.price_5ml)}
                 </span>
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-primary border border-primary/40 px-1.5 sm:px-2 py-0.5 rounded-sm">

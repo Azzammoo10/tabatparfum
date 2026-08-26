@@ -3,12 +3,23 @@ import { toast } from "sonner";
 import { Sun, Moon, ExternalLink, Wrench } from "lucide-react";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { supabase } from "@/lib/supabase";
 
 const inputCls =
   "w-full px-3 py-2 text-sm bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-2 focus:ring-[#C9A96E] text-[#111827] dark:text-[#F9FAFB]";
 const labelCls = "block text-xs font-medium text-[#111827] dark:text-[#F9FAFB] mb-1";
 
-const Card = ({ title, children, onSave }: { title: string; children: React.ReactNode; onSave: () => void }) => (
+const Card = ({
+  title,
+  children,
+  onSave,
+  saving = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onSave: () => void;
+  saving?: boolean;
+}) => (
   <div className="bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-lg p-5 space-y-4">
     <h3 className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">{title}</h3>
     <div className="space-y-3">{children}</div>
@@ -16,19 +27,33 @@ const Card = ({ title, children, onSave }: { title: string; children: React.Reac
       <button
         type="button"
         onClick={onSave}
-        className="px-4 py-2 text-sm rounded-md bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] hover:bg-[#1F2937] dark:hover:bg-[#C9A96E] dark:hover:text-[#111827]"
+        disabled={saving}
+        className="px-4 py-2 text-sm rounded-md bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] hover:bg-[#1F2937] dark:hover:bg-[#C9A96E] dark:hover:text-[#111827] disabled:opacity-50"
       >
-        Sauvegarder
+        {saving ? "Sauvegarde..." : "Sauvegarder"}
       </button>
     </div>
   </div>
 );
 
 const Parametres = () => {
-  const save = () => toast.success("Modifications enregistrées");
   const { customerTheme, setCustomerTheme, adminTheme, setAdminTheme } = useThemeContext();
   const { settings, update } = useAppSettings();
 
+  // Store Info State
+  const [storeName, setStoreName] = useState(settings.store_name || "TABAT");
+  const [storeEmail, setStoreEmail] = useState(settings.store_email || "contact@tabatperfume.com");
+  const [storePhone, setStorePhone] = useState(settings.store_phone || "+212 6 63 84 80 99");
+  const [storeAddress, setStoreAddress] = useState(settings.store_address || "Casablanca, Maroc");
+  const [savingStore, setSavingStore] = useState(false);
+
+  // Admin Account State
+  const [adminEmail, setAdminEmail] = useState("admin@tabatperfume.com");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
+  const [savingAdmin, setSavingAdmin] = useState(false);
+
+  // Maintenance State
   const [maintMode, setMaintMode] = useState(settings.maintenance_mode);
   const [maintMessage, setMaintMessage] = useState(settings.maintenance_message);
   const [igUrl, setIgUrl] = useState(settings.instagram_url);
@@ -36,11 +61,61 @@ const Parametres = () => {
   const [savingMaint, setSavingMaint] = useState(false);
 
   useEffect(() => {
+    setStoreName(settings.store_name || "TABAT");
+    setStoreEmail(settings.store_email || "contact@tabatperfume.com");
+    setStorePhone(settings.store_phone || "+212 6 63 84 80 99");
+    setStoreAddress(settings.store_address || "Casablanca, Maroc");
+
     setMaintMode(settings.maintenance_mode);
     setMaintMessage(settings.maintenance_message);
     setIgUrl(settings.instagram_url);
     setWaPhone(settings.whatsapp_phone);
   }, [settings]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) {
+        setAdminEmail(data.user.email);
+      }
+    });
+  }, []);
+
+  const saveStoreInfo = async () => {
+    setSavingStore(true);
+    const { error } = await update({
+      store_name: storeName,
+      store_email: storeEmail,
+      store_phone: storePhone,
+      store_address: storeAddress,
+    });
+    setSavingStore(false);
+    if (error) toast.error("Erreur de sauvegarde: " + error.message);
+    else toast.success("Informations de la boutique enregistrées dans Supabase");
+  };
+
+  const saveAdminAccount = async () => {
+    if (adminPassword && adminPassword !== adminConfirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+    setSavingAdmin(true);
+    try {
+      if (adminPassword) {
+        const { error } = await supabase.auth.updateUser({ password: adminPassword });
+        if (error) throw error;
+        toast.success("Mot de passe administrateur mis à jour dans Supabase Auth");
+        setAdminPassword("");
+        setAdminConfirmPassword("");
+      } else {
+        toast.info("Compte administrateur vérifié (Entrez un nouveau mot de passe pour le modifier)");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Échec de la mise à jour";
+      toast.error("Erreur mise à jour compte: " + msg);
+    } finally {
+      setSavingAdmin(false);
+    }
+  };
 
   const saveMaintenance = async () => {
     setSavingMaint(true);
@@ -100,37 +175,71 @@ const Parametres = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card title="Informations de la boutique" onSave={save}>
+      <Card title="Informations de la boutique" onSave={saveStoreInfo} saving={savingStore}>
         <div>
           <label className={labelCls}>Nom de la boutique</label>
-          <input className={inputCls} defaultValue="Myaura" />
+          <input
+            className={inputCls}
+            value={storeName}
+            onChange={(e) => setStoreName(e.target.value)}
+          />
         </div>
         <div>
-          <label className={labelCls}>Email</label>
-          <input className={inputCls} defaultValue="contact@myaura.ma" />
+          <label className={labelCls}>Email de contact</label>
+          <input
+            type="email"
+            className={inputCls}
+            value={storeEmail}
+            onChange={(e) => setStoreEmail(e.target.value)}
+          />
         </div>
         <div>
           <label className={labelCls}>Téléphone</label>
-          <input className={inputCls} defaultValue="+212 6 00 00 00 00" />
+          <input
+            className={inputCls}
+            value={storePhone}
+            onChange={(e) => setStorePhone(e.target.value)}
+          />
         </div>
         <div>
           <label className={labelCls}>Adresse</label>
-          <input className={inputCls} defaultValue="Casablanca, Maroc" />
+          <input
+            className={inputCls}
+            value={storeAddress}
+            onChange={(e) => setStoreAddress(e.target.value)}
+          />
         </div>
       </Card>
 
-      <Card title="Compte administrateur" onSave={save}>
+      <Card title="Compte administrateur" onSave={saveAdminAccount} saving={savingAdmin}>
         <div>
-          <label className={labelCls}>Email</label>
-          <input className={inputCls} defaultValue="admin@myaura.ma" />
+          <label className={labelCls}>Email administrateur</label>
+          <input
+            type="email"
+            className={inputCls}
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+          />
         </div>
         <div>
           <label className={labelCls}>Nouveau mot de passe</label>
-          <input type="password" className={inputCls} placeholder="••••••••" />
+          <input
+            type="password"
+            className={inputCls}
+            placeholder="••••••••"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+          />
         </div>
         <div>
           <label className={labelCls}>Confirmer le mot de passe</label>
-          <input type="password" className={inputCls} placeholder="••••••••" />
+          <input
+            type="password"
+            className={inputCls}
+            placeholder="••••••••"
+            value={adminConfirmPassword}
+            onChange={(e) => setAdminConfirmPassword(e.target.value)}
+          />
         </div>
       </Card>
 

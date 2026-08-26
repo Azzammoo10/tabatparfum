@@ -15,7 +15,6 @@ const Clients = () => {
             <thead className="bg-secondary text-muted-foreground text-xs uppercase tracking-wide">
               <tr>
                 <th className="text-left px-4 py-3">Nom</th>
-                <th className="text-left px-4 py-3">Email</th>
                 <th className="text-left px-4 py-3">Téléphone</th>
                 <th className="text-right px-4 py-3">Commandes</th>
                 <th className="text-right px-4 py-3">Total dépensé</th>
@@ -23,18 +22,17 @@ const Clients = () => {
               </tr>
             </thead>
             <tbody>
-              {loading && (<tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Chargement…</td></tr>)}
-              {error && !loading && (<tr><td colSpan={6} className="px-4 py-10 text-center text-destructive">{error}</td></tr>)}
+              {loading && (<tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Chargement…</td></tr>)}
+              {error && !loading && (<tr><td colSpan={5} className="px-4 py-10 text-center text-destructive">{error}</td></tr>)}
               {!loading && !error && customers.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Aucun client pour le moment.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Aucun client pour le moment.</td></tr>
               )}
               {customers.map((c) => (
                 <tr key={c.id} className="border-t border-border">
                   <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                   <td className="px-4 py-3 text-muted-foreground">{c.phone || "—"}</td>
-                  <td className="px-4 py-3 text-right">{c.total_orders}</td>
-                  <td className="px-4 py-3 text-right">{Number(c.total_spent).toLocaleString("fr-FR")} MAD</td>
+                  <td className="px-4 py-3 text-right font-medium">{c.total_orders}</td>
+                  <td className="px-4 py-3 text-right font-medium text-primary">{Number(c.total_spent).toLocaleString("fr-FR")} MAD</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(c.created_at)}</td>
                 </tr>
               ))}
@@ -55,14 +53,13 @@ const Clients = () => {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="font-medium text-foreground text-sm truncate">{c.name}</div>
-                <div className="text-xs text-muted-foreground truncate">{c.email}</div>
                 {c.phone && <div className="text-xs text-muted-foreground">{c.phone}</div>}
               </div>
               <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(c.created_at)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
               <span className="text-xs text-muted-foreground">{c.total_orders} commande(s)</span>
-              <span className="font-medium text-foreground">{Number(c.total_spent).toLocaleString("fr-FR")} MAD</span>
+              <span className="font-medium text-primary">{Number(c.total_spent).toLocaleString("fr-FR")} MAD</span>
             </div>
           </div>
         ))}
