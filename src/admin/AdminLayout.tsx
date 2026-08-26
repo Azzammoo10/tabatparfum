@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -12,91 +12,214 @@ import {
   Bot,
   Wallet,
   Flame,
-  Sun,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  Store,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const NAV = [
-  { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard, end: true },
-  { to: "/admin/produits", label: "Produits", icon: Package },
-  { to: "/admin/bestsellers", label: "Best Sellers", icon: Flame },
-  { to: "/admin/saison", label: "Parfums de Saison", icon: Sun },
-  { to: "/admin/commandes", label: "Commandes", icon: ShoppingBag },
-  { to: "/admin/finances", label: "Finances", icon: Wallet },
-  { to: "/admin/clients", label: "Clients", icon: Users },
-  { to: "/admin/bot", label: "Assistant", icon: Bot },
-  { to: "/admin/parametres", label: "Paramètres", icon: Settings },
+const NAV_GROUPS = [
+  {
+    title: "Vue d'ensemble",
+    items: [
+      { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard, end: true },
+    ],
+  },
+  {
+    title: "Catalogue & Vitrine",
+    items: [
+      { to: "/admin/produits", label: "Tous les Produits", icon: Package },
+      { to: "/admin/bestsellers", label: "Best Sellers", icon: Flame, badge: "Vedettes" },
+      { to: "/admin/saison", label: "Parfums de Saison", icon: Sparkles },
+    ],
+  },
+  {
+    title: "Ventes & Clients",
+    items: [
+      { to: "/admin/commandes", label: "Commandes", icon: ShoppingBag, isOrderLink: true },
+      { to: "/admin/finances", label: "Finances & Revenus", icon: Wallet },
+      { to: "/admin/clients", label: "Fichier Clients", icon: Users },
+    ],
+  },
+  {
+    title: "Système & Outils",
+    items: [
+      { to: "/admin/bot", label: "Assistant IA", icon: Bot },
+      { to: "/admin/parametres", label: "Paramètres du Site", icon: Settings },
+    ],
+  },
 ];
 
 const TITLES: Record<string, string> = {
   "/admin": "Tableau de bord",
-  "/admin/produits": "Produits",
+  "/admin/produits": "Gestion du Catalogue Produits",
   "/admin/bestsellers": "Gestion des Best Sellers",
   "/admin/saison": "Gestion des Parfums de Saison",
-  "/admin/commandes": "Commandes",
-  "/admin/finances": "Finances",
-  "/admin/clients": "Clients",
-  "/admin/bot": "Assistant virtuel",
-  "/admin/parametres": "Paramètres",
+  "/admin/commandes": "Gestion des Commandes",
+  "/admin/finances": "Statistiques Financières & Revenus",
+  "/admin/clients": "Base de Données Clients",
+  "/admin/bot": "Configuration de l'Assistant Virtuel",
+  "/admin/parametres": "Paramètres & Maintenance du Site",
 };
-
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
 
-  const title = TITLES[location.pathname] || "Admin";
+  const title = TITLES[location.pathname] || "Administration";
 
-  const logout = () => {
-    supabase.auth.signOut();
+  // Fetch pending orders count for dynamic badge
+  useEffect(() => {
+    const fetchPendingOrders = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "en_attente");
+        if (!error && typeof count === "number") {
+          setPendingOrdersCount(count);
+        }
+      } catch {
+        // silent fallback
+      }
+    };
+
+    fetchPendingOrders();
+    const interval = setInterval(fetchPendingOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
     navigate("/admin/login", { replace: true });
   };
 
-  // Sidebar uses fixed dark palette in BOTH themes (per spec).
   const SidebarContent = (
-    <div className="flex flex-col h-full bg-[#111827] text-[#F9FAFB]">
-      <div className="px-6 py-5 border-b border-white/5 flex flex-col items-center justify-center gap-1.5 text-center w-full">
-        <img src="/logo.png" alt="TABAT Logo" className="h-10 w-auto object-contain shrink-0 invert" />
-        <span className="text-[11px] text-[#C9A96E] tracking-widest uppercase font-semibold">Admin Panel</span>
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0e131f] via-[#111827] to-[#0a0e17] text-[#F9FAFB] border-r border-white/5 shadow-2xl overflow-y-auto">
+      {/* Brand Header */}
+      <div className="px-5 py-5 border-b border-white/10 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Link to="/admin" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#C9A96E] to-[#8d713c] p-0.5 shadow-md shadow-[#C9A96E]/20 flex items-center justify-center shrink-0">
+              <img
+                src="/logo.png"
+                alt="TABAT"
+                className="w-full h-full object-contain p-1 invert"
+              />
+            </div>
+            <div>
+              <span className="font-serif text-base font-bold tracking-wider text-white block leading-tight group-hover:text-[#C9A96E] transition-colors">
+                TABAT
+              </span>
+              <span className="text-[10px] text-[#C9A96E] uppercase tracking-[0.2em] font-medium block">
+                Maison de Parfum
+              </span>
+            </div>
+          </Link>
+
+          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live
+          </span>
+        </div>
+
+        {/* View Live Store Button */}
+        <Link
+          to="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#C9A96E]/40 text-xs text-[#F9FAFB]/80 hover:text-white transition-all duration-200 group"
+        >
+          <div className="flex items-center gap-2">
+            <Store className="w-3.5 h-3.5 text-[#C9A96E] group-hover:scale-110 transition-transform" />
+            <span>Voir la boutique</span>
+          </div>
+          <ExternalLink className="w-3 h-3 text-white/40 group-hover:text-white transition-colors" />
+        </Link>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
-                isActive
-                  ? "bg-[#C9A96E] text-[#111827] font-medium"
-                  : "text-[#F9FAFB]/80 hover:bg-white/5 hover:text-white"
-              }`
-            }
-          >
-            <item.icon className="w-4 h-4" />
-            <span>{item.label}</span>
-          </NavLink>
+
+      {/* Navigation Sections */}
+      <nav className="flex-1 px-3 py-4 space-y-6">
+        {NAV_GROUPS.map((group, gIdx) => (
+          <div key={gIdx} className="space-y-1.5">
+            <h3 className="px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-[#C9A96E]/70 select-none">
+              {group.title}
+            </h3>
+            <div className="space-y-1">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#C9A96E] to-[#b39155] text-[#111827] font-semibold shadow-lg shadow-[#C9A96E]/20 translate-x-0.5"
+                        : "text-[#F9FAFB]/75 hover:bg-white/7 hover:text-white hover:translate-x-0.5"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <item.icon
+                          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                            isActive
+                              ? "text-[#111827]"
+                              : "text-[#C9A96E] group-hover:scale-110 group-hover:text-white"
+                          }`}
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+
+                      {/* Badges */}
+                      {item.isOrderLink && pendingOrdersCount > 0 && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow-xs ${
+                            isActive
+                              ? "bg-[#111827] text-[#C9A96E]"
+                              : "bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse"
+                          }`}
+                        >
+                          {pendingOrdersCount}
+                        </span>
+                      )}
+
+                      {item.badge && !item.isOrderLink && (
+                        <span
+                          className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded-md ${
+                            isActive
+                              ? "bg-[#111827]/30 text-[#111827]"
+                              : "bg-white/10 text-[#C9A96E] border border-white/5"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
-      <div className="p-3 border-t border-white/5">
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-[#F9FAFB]/80 hover:bg-white/5 hover:text-white transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Déconnexion</span>
-        </button>
-      </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#0F0F0F] font-sans text-[#111827] dark:text-[#F9FAFB]">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 z-30">
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 z-30">
         {SidebarContent}
       </aside>
 
@@ -104,35 +227,49 @@ const AdminLayout = () => {
       {mobileOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 bg-black/50 z-40"
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in duration-200"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="md:hidden fixed inset-y-0 left-0 w-60 z-50">
+          <aside className="md:hidden fixed inset-y-0 left-0 w-64 z-50 animate-in slide-in-from-left duration-300 shadow-2xl">
             {SidebarContent}
           </aside>
         </>
       )}
 
-      <div className="md:ml-60 flex flex-col min-h-screen">
+      <div className="md:ml-64 flex flex-col min-h-screen transition-all">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white dark:bg-[#1A1A1A] border-b border-[#E5E7EB] dark:border-[#2A2A2A] h-14 flex items-center justify-between px-4 md:px-6">
+        <header className="sticky top-0 z-20 bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-md border-b border-[#E5E7EB] dark:border-[#2A2A2A] h-14 flex items-center justify-between px-4 md:px-6 shadow-xs">
           <div className="flex items-center gap-3">
             <button
-              className="md:hidden p-2 -ml-2 rounded hover:bg-[#F8F9FA] dark:hover:bg-white/5"
+              className="md:hidden p-2 -ml-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Menu"
+              aria-label="Menu de navigation"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <h1 className="text-base md:text-lg font-medium">{title}</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle className="text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white hover:bg-[#F8F9FA] dark:hover:bg-white/5" />
-            <div className="hidden sm:block text-right">
-              <div className="text-sm font-medium leading-tight">Admin</div>
-              <div className="text-xs text-[#6B7280] dark:text-[#9CA3AF] leading-tight">admin@tabatperfume.com</div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#C9A96E] hidden sm:inline" />
+              <h1 className="text-base md:text-lg font-semibold tracking-tight text-foreground">
+                {title}
+              </h1>
             </div>
-            <div className="w-9 h-9 rounded-full bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] flex items-center justify-center text-sm font-medium">
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card/60 hover:border-primary text-xs font-medium text-foreground hover:text-primary transition-all"
+            >
+              <Store className="w-3.5 h-3.5 text-primary" />
+              <span>Boutique</span>
+              <ExternalLink className="w-3 h-3 text-muted-foreground" />
+            </Link>
+
+            <ThemeToggle className="text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white hover:bg-[#F8F9FA] dark:hover:bg-white/5 rounded-full" />
+
+            <div className="w-8 h-8 rounded-full bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] font-bold flex items-center justify-center text-xs shadow-xs">
               A
             </div>
           </div>

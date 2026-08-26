@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
@@ -12,8 +12,8 @@ import { useParfum } from "@/hooks/useParfums";
 import { useCart } from "@/store/cart";
 import { toast } from "sonner";
 import { SIZES, SIZE_META, formatMAD, priceFor } from "@/lib/sizes";
-const AVAILABLE_SIZES = SIZES.filter((s) => s !== "20ml" && s !== "full");
 import type { Size } from "@/types/database";
+import type { OrderSelectionItem } from "@/components/content/ExpressOrderForm";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,11 +27,42 @@ const ParfumDetail = () => {
   const { parfumId } = useParams();
   const navigate = useNavigate();
   const { data: parfum, loading, error } = useParfum(parfumId);
-
-  // Static size selection (10ml default, always visible form)
-  const [size, setSize] = useState<Size>("10ml");
-  const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+
+  // State des quantités initialisé pour chaque format
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!parfum) return;
+    const isFull = parfum.sale_mode === "full_bottle";
+    const sizes: Size[] = isFull
+      ? ["full"]
+      : (["5ml", "10ml", "20ml"] as Size[]).filter((s) => {
+          const p = priceFor(parfum, s);
+          return typeof p === "number" && !isNaN(p) && p > 0;
+        });
+
+    const initial: Record<string, number> = {};
+    sizes.forEach((s, idx) => {
+      initial[s] = idx === 0 ? 1 : 0;
+    });
+    setQuantities(initial);
+  }, [parfum?.id, parfum?.sale_mode, parfum?.price_5ml, parfum?.price_10ml, parfum?.price_20ml]);
+
+  const updateSizeQty = (s: Size, delta: number) => {
+    setQuantities((prev) => {
+      const current = prev[s] ?? 0;
+      const next = Math.max(0, current + delta);
+      return { ...prev, [s]: next };
+    });
+  };
+
+  const setDirectSizeQty = (s: Size, qty: number) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [s]: Math.max(0, qty),
+    }));
+  };
 
   if (loading) {
     return (
@@ -72,28 +103,66 @@ const ParfumDetail = () => {
   }
 
   const isFullBottle = parfum.sale_mode === "full_bottle";
-  const effectiveSize: Size = isFullBottle ? "full" : size;
-  const unitPrice = priceFor(parfum, effectiveSize);
-  const total = unitPrice * quantity;
+
+  // STRICTEMENT n'afficher que les formats ayant un prix > 0 configuré en base de données
+  const availableSizes: Size[] = isFullBottle
+    ? ["full"]
+    : (["5ml", "10ml", "20ml"] as Size[]).filter((s) => {
+        const p = priceFor(parfum, s);
+        return typeof p === "number" && !isNaN(p) && p > 0;
+      });
+
   const fullStock = parfum.full_bottle_stock ?? 0;
   const outOfStock =
     !parfum.is_active ||
     parfum.stock_status === "rupture" ||
     (isFullBottle && fullStock <= 0);
 
-  const handleAddToCart = () => {
-    addItem({
-      id: parfum.id,
-      name: parfum.name,
-      maison: parfum.maison,
-      size: effectiveSize,
-      quantity,
-      price: unitPrice,
-      imageLabel: parfum.image_label,
-      imageUrl: parfum.image_url,
+  // Selected items with quantity > 0
+  const selectedItems: OrderSelectionItem[] = availableSizes
+    .filter((s) => (quantities[s] ?? 0) > 0)
+    .map((s) => {
+      const qty = quantities[s] ?? 0;
+      const unitPrice = priceFor(parfum, s);
+      return {
+        size: s,
+        sizeLabel:
+          s === "full"
+            ? parfum.full_bottle_volume_ml
+              ? `${parfum.full_bottle_volume_ml} ml`
+              : "Flacon Complet"
+            : SIZE_META[s]?.label ?? s,
+        quantity: qty,
+        unitPrice,
+        subtotal: unitPrice * qty,
+      };
     });
+
+  const totalQuantity = selectedItems.reduce((acc, it) => acc + it.quantity, 0);
+  const totalPrice = selectedItems.reduce((acc, it) => acc + it.subtotal, 0);
+
+  const handleAddToCart = () => {
+    if (selectedItems.length === 0) {
+      toast.error("Veuillez choisir une quantité pour au moins un format");
+      return;
+    }
+
+    selectedItems.forEach((item) => {
+      addItem({
+        id: parfum.id,
+        name: parfum.name,
+        maison: parfum.maison,
+        size: item.size as Size,
+        quantity: item.quantity,
+        price: item.unitPrice,
+        imageLabel: parfum.image_label,
+        imageUrl: parfum.image_url,
+      });
+    });
+
+    const summary = selectedItems.map((i) => `${i.sizeLabel} × ${i.quantity}`).join(", ");
     toast.success("Ajouté au panier", {
-      description: `${parfum.name} — ${SIZE_META[effectiveSize].label} × ${quantity}`,
+      description: `${parfum.name} (${summary})`,
     });
   };
 
@@ -110,15 +179,13 @@ const ParfumDetail = () => {
     brand: { "@type": "Brand", name: parfum.maison },
     description: parfum.description || undefined,
     image: parfum.image_url || undefined,
-    category: parfum.gender,
     offers: {
-      "@type": "AggregateOffer",
+      "@type": "Offer",
       priceCurrency: "MAD",
-      lowPrice: parfum.price_5ml,
-      highPrice: parfum.price_10ml,
-      availability: outOfStock
-        ? "https://schema.org/OutOfStock"
-        : "https://schema.org/InStock",
+      price: priceFor(parfum, isFullBottle ? "full" : "10ml"),
+      availability: parfum.is_active
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
     },
   };
 
@@ -175,19 +242,18 @@ const ParfumDetail = () => {
                   alt={parfum.name}
                   label={parfum.image_label}
                   aspect="aspect-[4/5]"
-                  fitMode="contain"
+                  fitMode="cover"
                   className="max-h-[260px] sm:max-h-[380px] md:max-h-[440px] w-full mx-auto"
                 />
 
-                {/* Glass Spray Bottle Badge */}
+                {/* Glass Spray Bottle Badge Preview */}
                 {!isFullBottle && (
                   <div
-                    key={size}
                     className="absolute top-3 right-3 z-20 bg-background/95 dark:bg-black/90 backdrop-blur-md border border-primary/50 rounded-2xl p-2.5 shadow-xl animate-in zoom-in-95 fade-in duration-300 flex flex-col items-center gap-1 min-w-[68px]"
                   >
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                        {size}
+                        {quantities["10ml"] > 0 ? "10ml" : quantities["5ml"] > 0 ? "5ml" : "Decant"}
                       </span>
                       <Sparkles className="w-3 h-3 text-primary animate-pulse" />
                     </div>
@@ -197,7 +263,7 @@ const ParfumDetail = () => {
                         className="rounded-t-[3px] shadow-sm relative"
                         style={{
                           width: "14px",
-                          height: size === "10ml" ? "18px" : "14px",
+                          height: quantities["10ml"] > 0 ? "18px" : "14px",
                           background: "linear-gradient(180deg, #111111 0%, #333333 40%, #0a0a0a 100%)",
                         }}
                       />
@@ -205,7 +271,7 @@ const ParfumDetail = () => {
                         className="border-x-2 border-b-2 border-primary/80 bg-gradient-to-b from-primary/10 via-primary/30 to-primary/15 rounded-b-[4px] relative shadow-inner"
                         style={{
                           width: "12px",
-                          height: size === "10ml" ? "65px" : "42px",
+                          height: quantities["10ml"] > 0 ? "65px" : "42px",
                         }}
                       >
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[90%] bg-foreground/50" />
@@ -213,7 +279,7 @@ const ParfumDetail = () => {
                     </div>
 
                     <p className="text-[7.5px] text-primary font-bold text-center">
-                      {size === "10ml" ? "≈ 130 ps" : "≈ 65 ps"}
+                      {totalQuantity > 0 ? `${totalQuantity} flacon${totalQuantity > 1 ? "s" : ""}` : "Flacons Verre"}
                     </p>
                   </div>
                 )}
@@ -257,91 +323,109 @@ const ParfumDetail = () => {
                 </div>
               </div>
 
-              {/* Format / Size Selection Cards */}
-              {!isFullBottle && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
-                      <Droplets className="w-3.5 h-3.5 text-primary" /> Choix du Format
-                    </span>
-                    <span className="text-[11px] text-primary font-medium">
-                      {size === "5ml" ? "≈ 65 pulvérisations" : "≈ 130 pulvérisations"}
-                    </span>
-                  </div>
+              {/* Multi-Format / Size Selection Cards with Independent Quantities */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-primary" /> Choix des Formats & Quantités
+                  </span>
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    Sélectionnez la quantité souhaitée par format
+                  </span>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {AVAILABLE_SIZES.map((s) => {
-                      const meta = SIZE_META[s];
-                      const selected = size === s;
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => setSize(s)}
-                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all active:scale-[0.98] ${
-                            selected
-                              ? "border-primary bg-primary/10 text-primary shadow-sm font-medium"
-                              : "border-border/80 bg-card/40 hover:border-primary/40 text-foreground"
-                          }`}
+                <div className="space-y-2.5">
+                  {availableSizes.map((s) => {
+                    const formatLabel =
+                      s === "full"
+                        ? parfum.full_bottle_volume_ml
+                          ? `${parfum.full_bottle_volume_ml} ml`
+                          : "Flacon Complet"
+                        : SIZE_META[s]?.label ?? s;
+
+                    const formatSub =
+                      s === "full"
+                        ? parfum.category === "deodorants-stick"
+                          ? "Stick Corporel"
+                          : "Flacon Scellé Original"
+                        : SIZE_META[s]?.sub ?? "Décantation";
+
+                    const qty = quantities[s] ?? 0;
+                    const isSelected = qty > 0;
+                    const unitPrice = priceFor(parfum, s);
+
+                    return (
+                      <div
+                        key={s}
+                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border/80 bg-card/40 hover:border-primary/40"
+                        }`}
+                      >
+                        {/* Format Info */}
+                        <div
+                          className="flex-1 cursor-pointer select-none"
+                          onClick={() => {
+                            if (qty === 0) setDirectSizeQty(s, 1);
+                          }}
                         >
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {selected && (
-                                <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                                  <Check className="w-3 h-3" />
-                                </span>
-                              )}
-                              <span className={`font-serif text-base font-bold truncate ${selected ? "text-primary" : "text-foreground"}`}>
-                                {meta.label}
-                              </span>
-                            </div>
-                            <span className={`text-sm sm:text-base font-serif font-bold shrink-0 ${selected ? "text-primary" : "text-foreground"}`}>
-                              {formatMAD(priceFor(parfum, s))}
+                          <div className="flex items-center gap-2">
+                            <span className="font-serif text-base font-bold text-foreground">
+                              {formatLabel}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full border border-border/50">
+                              {formatSub}
                             </span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground block">
-                            {meta.sub}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                          <div className="text-xs font-serif font-bold text-primary mt-0.5">
+                            {formatMAD(unitPrice)} <span className="text-[10px] font-normal text-muted-foreground">/ unité</span>
+                          </div>
+                        </div>
 
-              {/* Quantity Selector Bar */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-card/40 border border-border/70">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                  Quantité
-                </span>
-                <div className="flex items-center border border-border rounded-full bg-background px-1.5 py-0.5">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-7 w-7 flex items-center justify-center text-foreground hover:text-primary transition-colors"
-                    aria-label="Diminuer"
-                  >
-                    <Minus size={13} />
-                  </button>
-                  <span className="w-8 text-center text-sm font-semibold text-foreground">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="h-7 w-7 flex items-center justify-center text-foreground hover:text-primary transition-colors"
-                    aria-label="Augmenter"
-                  >
-                    <Plus size={13} />
-                  </button>
+                        {/* Individual Quantity Stepper */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center border border-border rounded-full bg-background px-1.5 py-0.5 shadow-xs">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSizeQty(s, -1);
+                              }}
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30"
+                              disabled={qty === 0}
+                              aria-label={`Diminuer ${formatLabel}`}
+                            >
+                              <Minus size={13} />
+                            </button>
+                            <span className="w-8 text-center text-sm font-semibold text-foreground">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSizeQty(s, 1);
+                              }}
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors"
+                              aria-label={`Augmenter ${formatLabel}`}
+                            >
+                              <Plus size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* STATIC ORDER FORM (ALWAYS VISIBLE DIRECTLY UNDER FORMATS & QUANTITY) */}
+              {/* STATIC ORDER FORM (ALWAYS VISIBLE DIRECTLY UNDER FORMATS & QUANTITIES) */}
               <ExpressOrderForm
                 parfumName={parfum.name}
                 maison={parfum.maison}
-                sizeLabel={SIZE_META[effectiveSize].label}
-                quantity={quantity}
-                totalPrice={total}
+                items={selectedItems}
+                totalPrice={totalPrice}
                 onAddToCart={handleAddToCart}
                 outOfStock={outOfStock}
               />

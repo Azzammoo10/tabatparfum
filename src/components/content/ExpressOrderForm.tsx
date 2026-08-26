@@ -7,21 +7,31 @@ import { toast } from "sonner";
 import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+export interface OrderSelectionItem {
+  size: string;
+  sizeLabel: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
 interface ExpressOrderFormProps {
   parfumName: string;
   maison: string;
-  sizeLabel: string;
-  quantity: number;
+  items?: OrderSelectionItem[];
+  sizeLabel?: string;
+  quantity?: number;
   totalPrice: number;
   onAddToCart?: () => void;
   outOfStock?: boolean;
 }
 
-const TABAT_WHATSAPP = "212663848099";
+const TABAT_WHATSAPP = "212752850156";
 
 const ExpressOrderForm = ({
   parfumName,
   maison,
+  items,
   sizeLabel,
   quantity,
   totalPrice,
@@ -34,9 +44,30 @@ const ExpressOrderForm = ({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Normalize selected items list
+  const activeItems: OrderSelectionItem[] = items && items.length > 0
+    ? items.filter((i) => i.quantity > 0)
+    : sizeLabel && quantity
+    ? [
+        {
+          size: sizeLabel,
+          sizeLabel: sizeLabel,
+          quantity: quantity,
+          unitPrice: totalPrice / quantity,
+          subtotal: totalPrice,
+        },
+      ]
+    : [];
+
+  const totalQuantity = activeItems.reduce((s, i) => s + i.quantity, 0);
+
   const handleWhatsAppOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (activeItems.length === 0) {
+      toast.error("Veuillez sélectionner au moins un format");
+      return;
+    }
     if (!fullName.trim()) {
       toast.error("Veuillez saisir votre Nom & Prénom");
       return;
@@ -68,14 +99,13 @@ const ExpressOrderForm = ({
           customer_address: address.trim(),
           total_amount: totalPrice,
           status: "en_attente",
-          items: [
-            {
-              name: `${maison} — ${parfumName}`,
-              size: sizeLabel,
-              quantity: quantity,
-              price: totalPrice / quantity,
-            },
-          ],
+          items: activeItems.map((it) => ({
+            name: `${maison} — ${parfumName}`,
+            size: it.sizeLabel,
+            quantity: it.quantity,
+            price: it.unitPrice,
+            subtotal: it.subtotal,
+          })),
         },
       ]);
 
@@ -89,6 +119,10 @@ const ExpressOrderForm = ({
     }
 
     // Build personalized luxury WhatsApp message
+    const formattedItemsLines = activeItems
+      .map((it) => `  ▫️ *${it.sizeLabel}* × ${it.quantity} (${formatMAD(it.subtotal)})`)
+      .join("\n");
+
     const message = [
       `*NOUVELLE COMMANDE TABAT (#${orderNumber})*`,
       "═══════════════════════",
@@ -96,8 +130,8 @@ const ExpressOrderForm = ({
       "*DÉTAILS DE LA COMMANDE*",
       `• *Maison* : ${maison}`,
       `• *Parfum* : ${parfumName}`,
-      `• *Format* : ${sizeLabel}`,
-      `• *Quantité* : ${quantity}`,
+      `• *Formats & Quantités* :`,
+      formattedItemsLines,
       `• *Total à Payer* : ${formatMAD(totalPrice)}`,
       "",
       "*INFORMATIONS DE LIVRAISON*",
@@ -116,7 +150,7 @@ const ExpressOrderForm = ({
 
     window.open(whatsappUrl, "_blank");
     setIsSubmitting(false);
-    toast.success("Commande enregistrée dans l'Admin et redirigée vers WhatsApp !");
+    toast.success("Commande enregistrée et transmise sur WhatsApp !");
   };
 
   return (
@@ -129,22 +163,34 @@ const ExpressOrderForm = ({
 
       {/* DYNAMICALLY UPDATED FORMAT & PRICE SUMMARY BANNER */}
       <div
-        key={`${sizeLabel}-${quantity}`}
-        className="bg-primary/10 border border-primary/40 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300"
+        className="bg-primary/10 border border-primary/40 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-300"
       >
         <div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-            <span className="text-xs uppercase tracking-wider font-bold text-primary">
-              {sizeLabel} × {quantity}
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {activeItems.length > 0 ? (
+                activeItems.map((it, idx) => (
+                  <span
+                    key={idx}
+                    className="text-xs uppercase tracking-wider font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-md"
+                  >
+                    {it.sizeLabel} × {it.quantity}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs uppercase tracking-wider font-bold text-destructive">
+                  Aucun format sélectionné
+                </span>
+              )}
+            </div>
           </div>
-          <p className="text-[10px] text-muted-foreground font-light mt-0.5">
+          <p className="text-[10px] text-muted-foreground font-light mt-1">
             {maison} — {parfumName}
           </p>
         </div>
 
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
             Prix Total
           </span>

@@ -79,15 +79,13 @@ export const useParfums = (filter?: ParfumFilter) => {
       const { data: rows, error: err } = await q;
 
       let result: Parfum[] = [];
-      const staticList = formatStaticParfums();
 
       if (!err && rows && rows.length > 0) {
-        const dbParfums = rows as unknown as Parfum[];
-        const dbIds = new Set(dbParfums.map((p) => p.id));
-        const missingFromDb = staticList.filter((p) => !dbIds.has(p.id));
-        result = [...dbParfums, ...missingFromDb];
+        result = rows as unknown as Parfum[];
+      } else if (!err && rows && rows.length === 0) {
+        result = [];
       } else {
-        result = staticList;
+        result = formatStaticParfums();
       }
 
       if (filter?.gender) result = result.filter((p) => p.gender === filter.gender);
@@ -104,13 +102,7 @@ export const useParfums = (filter?: ParfumFilter) => {
 
       setData(result);
     } catch {
-      let statics = formatStaticParfums();
-      if (filter?.isBestseller) {
-        statics = statics
-          .filter((p) => bestsellerIds.includes(p.id))
-          .sort((a, b) => bestsellerIds.indexOf(a.id) - bestsellerIds.indexOf(b.id));
-      }
-      setData(statics);
+      setData(formatStaticParfums());
     } finally {
       setLoading(false);
     }
@@ -155,6 +147,8 @@ export const useParfum = (id?: string) => {
         if (!alive) return;
         if (!err && row) {
           setData(row as unknown as Parfum);
+        } else if (!err && !row) {
+          setData(null);
         } else {
           const statics = formatStaticParfums();
           const found = statics.find((p) => p.id === id) ?? null;
