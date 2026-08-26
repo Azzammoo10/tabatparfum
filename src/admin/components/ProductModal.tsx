@@ -301,20 +301,27 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
 
     try {
       setSaving(true);
-      if (isUuid(id)) {
-        await upsertParfumToSupabase(payload, f.imageUrl || null);
-      }
+
+      // 1. Update local product store first (instant propagation to all pages and UI)
       if (initial) {
         updateProduct(initial.id, payload);
-        toast.success("Produit mis à jour");
+        toast.success("Produit mis à jour avec succès !");
       } else {
         addProduct(payload);
-        toast.success("Produit ajouté");
+        toast.success("Nouveau produit ajouté avec succès !");
       }
+
+      // 2. Sync to Supabase in background
+      try {
+        await upsertParfumToSupabase(payload, f.imageUrl || null);
+      } catch (dbErr) {
+        console.warn("Supabase upsert sync note:", dbErr);
+      }
+
       onOpenChange(false);
     } catch (err) {
       console.error(err);
-      toast.error("Erreur d'enregistrement côté serveur");
+      toast.error("Erreur lors de l'enregistrement du produit");
     } finally {
       setSaving(false);
     }

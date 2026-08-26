@@ -11,7 +11,7 @@ export type ParfumFilter = {
   category?: string;
 };
 
-// Convert products to Database Parfum format with live stocks
+// Convert products from useProductStore to database Parfum format with live images and stock
 const formatStaticParfums = (): Parfum[] => {
   const products = getProducts();
   return products.map((p) => {
@@ -71,16 +71,16 @@ const getActiveBestsellerIds = (): string[] => {
 };
 
 export const useParfums = (filter?: ParfumFilter) => {
-  const [data, setData] = useState<Parfum[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Parfum[]>(() => formatStaticParfums());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const key = JSON.stringify(filter ?? {});
 
   const load = useCallback(async () => {
-    setLoading(true);
     setError(null);
     const bestsellerIds = getActiveBestsellerIds();
+    const localParfums = formatStaticParfums();
 
     try {
       let q = supabase.from("parfums").select("*").order("created_at", { ascending: false });
@@ -89,15 +89,42 @@ export const useParfums = (filter?: ParfumFilter) => {
       if (filter?.isActive !== undefined) q = q.eq("is_active", filter.isActive);
       const { data: rows, error: err } = await q;
 
-      let result: Parfum[] = [];
+      // Merge local store products with Supabase rows (Local admin updates take priority for immediate preview)
+      const localMap = new Map(localParfums.map((p) => [p.id, p]));
+      let merged: Parfum[] = [];
 
       if (!err && rows && rows.length > 0) {
-        result = rows as unknown as Parfum[];
-      } else if (!err && rows && rows.length === 0) {
-        result = [];
+        const supabaseRows = rows as unknown as Parfum[];
+        // Combine Supabase rows with local overrides
+        const processedIds = new Set<string>();
+
+        supabaseRows.forEach((row) => {
+          const localOverride = localMap.get(row.id);
+          if (localOverride) {
+            // Keep local updated image and fields if modified
+            merged.push({
+              ...row,
+              ...localOverride,
+              image_url: localOverride.image_url || row.image_url,
+            });
+            processedIds.add(row.id);
+          } else {
+            merged.push(row);
+            processedIds.add(row.id);
+          }
+        });
+
+        // Add any local products not present in Supabase
+        localParfums.forEach((p) => {
+          if (!processedIds.has(p.id)) {
+            merged.push(p);
+          }
+        });
       } else {
-        result = formatStaticParfums();
+        merged = localParfums;
       }
+
+      let result = merged;
 
       if (filter?.gender) result = result.filter((p) => p.gender === filter.gender);
       if (filter?.isNew !== undefined) result = result.filter((p) => p.is_new === filter.isNew);
@@ -105,7 +132,6 @@ export const useParfums = (filter?: ParfumFilter) => {
       if (filter?.category) result = result.filter((p) => p.category === filter.category);
 
       if (filter?.isBestseller) {
-        // Filter to the configured Best Sellers and sort by rank
         result = result
           .filter((p) => bestsellerIds.includes(p.id))
           .sort((a, b) => bestsellerIds.indexOf(a.id) - bestsellerIds.indexOf(b.id));
@@ -113,7 +139,7 @@ export const useParfums = (filter?: ParfumFilter) => {
 
       setData(result);
     } catch {
-      setData(formatStaticParfums());
+      setData(localParfums);
     } finally {
       setLoading(false);
     }
@@ -138,8 +164,12 @@ export const useParfums = (filter?: ParfumFilter) => {
 };
 
 export const useParfum = (id?: string) => {
-  const [data, setData] = useState<Parfum | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Parfum | null>(() => {
+    if (!id) return null;
+    const statics = formatStaticParfums();
+    return statics.find((p) => p.id === id) ?? null;
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchItem = useCallback(async () => {
@@ -148,8 +178,10 @@ export const useParfum = (id?: string) => {
       setLoading(false);
       return;
     }
-    setLoading(true);
     setError(null);
+    const statics = formatStaticParfums();
+    const localFound = statics.find((p) => p.id === id) ?? null;
+
     try {
       const { data: row, error: err } = await supabase
         .from("parfums")
@@ -158,18 +190,21 @@ export const useParfum = (id?: string) => {
         .maybeSingle();
 
       if (!err && row) {
-        setData(row as unknown as Parfum);
-      } else if (!err && !row) {
-        setData(null);
+        const dbParfum = row as unknown as Parfum;
+        if (localFound) {
+          setData({
+            ...dbParfum,
+            ...localFound,
+            image_url: localFound.image_url || dbParfum.image_url,
+          });
+        } else {
+          setData(dbParfum);
+        }
       } else {
-        const statics = formatStaticParfums();
-        const found = statics.find((p) => p.id === id) ?? null;
-        setData(found);
+        setData(localFound);
       }
     } catch {
-      const statics = formatStaticParfums();
-      const found = statics.find((p) => p.id === id) ?? null;
-      setData(found);
+      setData(localFound);
     } finally {
       setLoading(false);
     }
@@ -188,15 +223,23 @@ export const useParfum = (id?: string) => {
   return { data, loading, error, refetch: fetchItem };
 };
 
-/** Synchronous helper: fetch parfums by id list at once (for cart display). */
+/** Helper to fetch parfums by id list (for cart & checkout display) */
 export const fetchParfumsByIds = async (ids: string[]): Promise<Parfum[]> => {
   if (!ids.length) return [];
+  const statics = formatStaticParfums();
+  const staticMap = new Map(statics.map((p) => [p.id, p]));
+
   try {
     const { data, error } = await supabase.from("parfums").select("*").in("id", ids);
-    if (!error && data && data.length > 0) return data as unknown as Parfum[];
+    if (!error && data && data.length > 0) {
+      return (data as unknown as Parfum[]).map((row) => {
+        const local = staticMap.get(row.id);
+        return local ? { ...row, ...local, image_url: local.image_url || row.image_url } : row;
+      });
+    }
   } catch {
     // fallback
   }
-  const statics = formatStaticParfums();
+
   return statics.filter((p) => ids.includes(p.id));
 };
