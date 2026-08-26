@@ -1,29 +1,31 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag as BagIcon, Menu, X, Sparkles, ChevronRight, ShieldCheck } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Search,
+  ShoppingBag as BagIcon,
+  Menu,
+  X,
+  Sparkles,
+  ChevronRight,
+  Flame,
+  Flower2,
+  Shield,
+  Crown,
+  Info,
+  MessageCircle,
+} from "lucide-react";
 import ShoppingBag from "./ShoppingBag";
 import { useCart } from "@/store/cart";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useParfums } from "@/hooks/useParfums";
 import { formatMAD } from "@/lib/sizes";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
-const desktopNavLeft = [
-  { name: "Homme", href: "/collection/homme" },
-  { name: "Femme", href: "/collection/femme" },
-];
-
-const desktopNavRight = [
-  { name: "Déodorants Stick", href: "/collection/deodorants-stick" },
-  { name: "À Propos", href: "/about" },
-  { name: "Les Packs", href: "/collection/packs", isGold: true },
-];
-
-const mobileNavLinks = [
-  { name: "Les Packs Premium", href: "/collection/packs", sub: "Offres & coffrets exclusifs", isGold: true },
-  { name: "Parfums Homme", href: "/collection/homme", sub: "Fragrances masculines & élégantes" },
-  { name: "Parfums Femme", href: "/collection/femme", sub: "Sillages féminins & envoûtants" },
-  { name: "Déodorants Stick", href: "/collection/deodorants-stick", sub: "Protection fraîcheur 48h" },
-  { name: "À Propos de TABAT", href: "/about", sub: "Notre histoire, vision & engagements" },
+const navLinks = [
+  { name: "Homme", href: "/collection/homme", icon: Flame },
+  { name: "Femme", href: "/collection/femme", icon: Flower2 },
+  { name: "Déos", href: "/collection/deodorants-stick", icon: Shield },
+  { name: "Packs", href: "/collection/packs", isGold: true, icon: Crown },
 ];
 
 const Navigation = () => {
@@ -34,14 +36,36 @@ const Navigation = () => {
 
   const { totalItems } = useCart();
   const { data: allParfums } = useParfums();
+  const { settings } = useAppSettings();
   const navigate = useNavigate();
+  const location = useLocation();
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut Ctrl+K / Cmd+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      } else if (e.key === "Escape") {
+        setIsSearchOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
+      setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [isSearchOpen]);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+  }, [location.pathname]);
 
   const filteredParfums = searchQuery.trim()
     ? allParfums
@@ -60,218 +84,222 @@ const Navigation = () => {
     navigate(`/parfum/${id}`);
   };
 
-  const handleNavClick = (href: string) => {
-    setIsMobileMenuOpen(false);
-    navigate(href);
-  };
+  const waRaw = settings.whatsapp_phone || "212752850156";
+  const waNumber = waRaw.replace(/[^0-9]/g, "");
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Bonjour TABAT, j'aurais besoin d'un conseil.")}`;
 
   return (
-    <nav className="relative bg-background border-b border-border z-[100]">
-      <div className="flex items-center justify-between h-14 sm:h-16 md:h-18 px-4 sm:px-6 max-w-7xl mx-auto">
-        {/* Left Mobile Menu Trigger & Desktop Links */}
-        <div className="flex items-center flex-1">
+    <div className="relative">
+      {/* Floating Pill Container */}
+      <nav className="bg-background/85 dark:bg-[#12141a]/90 backdrop-blur-2xl border border-border/80 dark:border-white/10 rounded-full shadow-lg shadow-black/5 dark:shadow-black/30 px-3.5 sm:px-5 py-2 flex items-center justify-between transition-all duration-300">
+        
+        {/* Left Side: Mobile Hamburger & Desktop Navigation Links */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 -ml-1 text-foreground hover:text-primary transition-colors rounded-lg active:scale-95 flex items-center gap-1.5"
             onClick={() => {
               setIsSearchOpen(false);
               setIsMobileMenuOpen((v) => !v);
             }}
+            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-foreground hover:text-primary hover:bg-muted/50 transition-colors cursor-pointer"
             aria-label="Menu"
           >
-            {isMobileMenuOpen ? (
-              <X size={20} className="text-primary" />
-            ) : (
-              <Menu size={20} className="text-foreground" />
-            )}
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-              Menu
-            </span>
+            {isMobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
           </button>
 
-          <div className="hidden md:flex items-center space-x-6">
-            {desktopNavLeft.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="group relative text-xs uppercase tracking-[0.2em] font-medium text-foreground hover:text-primary transition-colors py-2"
-              >
-                <span>{item.name}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-300" />
-              </Link>
-            ))}
+          {/* Desktop Nav Pills */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.href;
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+                    link.isGold
+                      ? isActive
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "text-primary hover:bg-primary/10"
+                      : isActive
+                      ? "bg-foreground text-background shadow-xs"
+                      : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{link.name}</span>
+                  {link.isGold && !isActive && <Sparkles className="w-2.5 h-2.5 text-primary" />}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        {/* Center Logo */}
+        {/* Center: Brand Logo */}
         <Link
           to="/"
-          className="flex items-center justify-center py-1 transition-transform duration-300 hover:scale-105"
+          className="flex items-center justify-center px-2 py-0.5 transition-transform duration-200 hover:scale-105 select-none"
         >
           <img
             src="/logo.png"
             alt="TABAT"
-            className="h-8 sm:h-10 md:h-11 w-auto object-contain dark:invert"
+            className="h-7 sm:h-8 md:h-9 w-auto object-contain dark:invert"
           />
         </Link>
 
-        {/* Right Desktop Links & Actions */}
-        <div className="flex items-center justify-end flex-1 gap-1 sm:gap-2">
-          <div className="hidden md:flex items-center space-x-6 mr-3">
-            {desktopNavRight.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`group relative text-xs uppercase tracking-[0.2em] font-medium transition-colors py-2 ${
-                  item.isGold
-                    ? "text-primary font-semibold"
-                    : "text-foreground hover:text-primary"
-                }`}
-              >
-                <span>{item.name}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-300" />
-              </Link>
-            ))}
+        {/* Right Side: À Propos, Theme, Search, Cart */}
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Desktop À Propos Link */}
+          <Link
+            to="/about"
+            className={`hidden lg:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors mr-1 ${
+              location.pathname === "/about"
+                ? "bg-foreground text-background"
+                : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
+            }`}
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span>À Propos</span>
+          </Link>
+
+          {/* Theme Toggle */}
+          <div className="flex items-center">
+            <ThemeToggle />
           </div>
 
-          <ThemeToggle />
-
-          {/* Search Trigger */}
+          {/* Search Button */}
           <button
-            className="p-2 text-foreground/80 hover:text-primary transition-colors rounded-full hover:bg-primary/5 active:scale-95"
-            aria-label="Recherche"
             onClick={() => {
               setIsMobileMenuOpen(false);
               setIsSearchOpen((v) => !v);
             }}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+              isSearchOpen
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
+            }`}
+            aria-label="Rechercher"
+            title="Recherche (Ctrl + K)"
           >
-            <Search size={18} strokeWidth={1.75} />
+            <Search size={17} strokeWidth={1.8} />
           </button>
 
-          {/* Cart Trigger */}
+          {/* Cart Button with Animated Badge */}
           <button
-            className="p-2 text-foreground/80 hover:text-primary transition-colors relative rounded-full hover:bg-primary/5 active:scale-95"
-            aria-label="Panier"
             onClick={() => setIsBagOpen(true)}
+            className="relative w-9 h-9 rounded-full flex items-center justify-center text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-all duration-200 cursor-pointer active:scale-95"
+            aria-label="Panier"
           >
-            <BagIcon size={18} strokeWidth={1.75} />
+            <BagIcon size={17} strokeWidth={1.8} />
             {totalItems > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-xs animate-in zoom-in duration-150">
                 {totalItems}
               </span>
             )}
           </button>
         </div>
-      </div>
+      </nav>
 
-      {/* Page Dimming Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 top-24 bg-black/60 z-40 animate-fade-in"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* REFINED COMPACT MOBILE DROPDOWN MENU (NO EMOJIS - LUXURY STYLING) */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background text-foreground border-b-2 border-primary/30 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-300">
-          <div className="p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between px-1 mb-1">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">
-                Collections TABAT
-              </p>
-              <span className="text-[10px] font-brand text-primary">Haute Parfumerie</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2">
-              {mobileNavLinks.map((cat) => (
-                <button
-                  key={cat.name}
-                  onClick={() => handleNavClick(cat.href)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl text-left border transition-all active:scale-[0.98] ${
-                    cat.isGold
-                      ? "bg-primary/10 border-primary/40 text-primary font-medium shadow-xs"
-                      : "bg-card border-border/80 text-foreground hover:border-primary/40"
-                  }`}
-                >
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                      <span>{cat.name}</span>
-                      {cat.isGold && <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground font-light mt-0.5">
-                      {cat.sub}
-                    </div>
-                  </div>
-                  <ChevronRight size={15} className="text-primary/70" />
-                </button>
-              ))}
-            </div>
-
-            <div className="pt-3 mt-3 border-t border-border/60 text-center flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] text-muted-foreground tracking-widest uppercase font-medium">
-                Livraison 24-48h partout au Maroc • Paiement à la livraison
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DYNAMIC SEARCH OVERLAY */}
+      {/* Floating Spotlight Search Card */}
       {isSearchOpen && (
-        <div className="absolute top-full left-0 right-0 bg-background text-foreground border-b-2 border-primary/30 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-300">
-          <div className="p-4 max-w-xl mx-auto space-y-3">
-            <div className="flex items-center bg-card border border-border rounded-xl px-3.5 py-2">
+        <div className="absolute top-full left-0 right-0 mt-2 z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <div className="bg-background/95 dark:bg-[#151821]/95 backdrop-blur-2xl border border-border/80 dark:border-white/10 rounded-2xl p-3.5 sm:p-4 shadow-xl max-w-xl mx-auto space-y-3">
+            <div className="flex items-center bg-card/80 border border-border/80 focus-within:border-primary rounded-xl px-3 py-2 transition-all">
               <Search size={16} className="text-primary mr-2 shrink-0" />
               <input
                 ref={searchInputRef}
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher un parfum, une maison..."
-                className="w-full bg-transparent text-sm text-foreground outline-none font-light placeholder:text-muted-foreground"
+                placeholder="Rechercher un parfum, une maison (ex: Baccarat, Gris Charnel)..."
+                className="w-full bg-transparent text-xs sm:text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-muted-foreground hover:text-foreground text-xs px-1 cursor-pointer"
+                >
+                  Effacer
+                </button>
+              )}
               <button
                 onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery("");
                 }}
-                className="text-muted-foreground hover:text-foreground p-1"
+                className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
+            {/* Quick Suggestions */}
+            {!searchQuery.trim() && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] uppercase font-semibold text-muted-foreground mr-1">Suggestions :</span>
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    navigate("/collection/packs");
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Crown className="w-3 h-3" /> Les Packs
+                </button>
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    navigate("/collection/homme");
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Flame className="w-3 h-3 text-primary" /> Homme
+                </button>
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    navigate("/collection/femme");
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Flower2 className="w-3 h-3 text-primary" /> Femme
+                </button>
+              </div>
+            )}
+
+            {/* Results List */}
             {searchQuery.trim() !== "" && (
-              <div className="space-y-1.5 max-h-60 overflow-y-auto">
+              <div className="space-y-1 max-h-60 overflow-y-auto divide-y divide-border/40">
                 {filteredParfums.length > 0 ? (
                   filteredParfums.map((product) => (
                     <button
                       key={product.id}
                       onClick={() => handleSelectProduct(product.id)}
-                      className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-primary/10 transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-primary/10 transition-colors text-left group cursor-pointer"
                     >
                       <img
                         src={product.image_url || "/placeholder.svg"}
                         alt={product.name}
-                        className="w-10 h-10 object-cover rounded border border-border"
+                        className="w-10 h-10 object-cover rounded-lg border border-border shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                          {product.maison}
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium truncate">
+                          {product.maison} · {product.gender}
                         </p>
-                        <h4 className="font-serif text-xs font-medium text-foreground truncate">
+                        <h4 className="font-serif text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                           {product.name}
                         </h4>
                       </div>
-                      <span className="text-xs font-mono text-primary shrink-0">
-                        {formatMAD(product.price_5ml)}
-                      </span>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-serif font-bold text-primary">
+                          {formatMAD(product.price_5ml)}
+                        </span>
+                      </div>
                     </button>
                   ))
                 ) : (
-                  <div className="py-4 text-center text-xs text-muted-foreground">
-                    Aucun résultat trouvé
+                  <div className="py-6 text-center text-xs text-muted-foreground">
+                    Aucun parfum trouvé pour « {searchQuery} »
                   </div>
                 )}
               </div>
@@ -280,8 +308,97 @@ const Navigation = () => {
         </div>
       )}
 
+      {/* Floating Mobile Dropdown Menu Card */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 mt-2 z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <div className="bg-background/95 dark:bg-[#151821]/95 backdrop-blur-2xl border border-border/80 dark:border-white/10 rounded-2xl p-4 shadow-xl space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to="/collection/homme"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Flame className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold block">Homme</span>
+                  <span className="text-[10px] text-muted-foreground">Masculin</span>
+                </div>
+              </Link>
+
+              <Link
+                to="/collection/femme"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Flower2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold block">Femme</span>
+                  <span className="text-[10px] text-muted-foreground">Féminin</span>
+                </div>
+              </Link>
+
+              <Link
+                to="/collection/deodorants-stick"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-secondary text-foreground flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold block">Déodorants</span>
+                  <span className="text-[10px] text-muted-foreground">Protection</span>
+                </div>
+              </Link>
+
+              <Link
+                to="/collection/packs"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-primary/10 border border-primary/30 text-primary transition-all shadow-xs"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center shrink-0">
+                  <Crown className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold block">Les Packs</span>
+                  <span className="text-[10px] text-primary/80">Exclusifs</span>
+                </div>
+              </Link>
+            </div>
+
+            <div className="pt-2 border-t border-border/60 flex flex-col gap-2">
+              <Link
+                to="/about"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-card/60 border border-border/60 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-muted-foreground" /> À Propos de TABAT
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              </Link>
+
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Conseil & Commande WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shopping Bag Drawer */}
       <ShoppingBag isOpen={isBagOpen} onClose={() => setIsBagOpen(false)} />
-    </nav>
+    </div>
   );
 };
 
