@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import ThemeToggle from "@/components/ThemeToggle";
 
+
 const NAV_GROUPS = [
   {
     title: "Vue d'ensemble",
