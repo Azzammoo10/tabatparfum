@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Sun, Moon, ExternalLink, Wrench, Eye, EyeOff } from "lucide-react";
-import { useThemeContext } from "@/contexts/ThemeContext";
+import { Wrench, Eye, EyeOff } from "lucide-react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { supabase } from "@/lib/supabase";
 
@@ -37,7 +36,6 @@ const Card = ({
 );
 
 const Parametres = () => {
-  const { customerTheme, setCustomerTheme, adminTheme, setAdminTheme } = useThemeContext();
   const { settings, update } = useAppSettings();
 
   // Store Info State
@@ -132,49 +130,6 @@ const Parametres = () => {
     else toast.success(maintMode ? "Mode maintenance activé" : "Mode maintenance désactivé");
   };
 
-  const ThemeRow = ({
-    label,
-    description,
-    value,
-    onChange,
-  }: {
-    label: string;
-    description: string;
-    value: "dark" | "light";
-    onChange: (t: "dark" | "light") => void;
-  }) => (
-    <div className="flex items-center justify-between gap-4 py-2">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-[#111827] dark:text-[#F9FAFB]">{label}</p>
-        <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">{description}</p>
-      </div>
-      <div className="inline-flex rounded-md border border-[#E5E7EB] dark:border-[#2A2A2A] overflow-hidden shrink-0">
-        <button
-          type="button"
-          onClick={() => onChange("light")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors ${
-            value === "light"
-              ? "bg-[#C9A96E] text-[#111827]"
-              : "bg-transparent text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#F8F9FA] dark:hover:bg-white/5"
-          }`}
-        >
-          <Sun className="w-3.5 h-3.5" /> Clair
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange("dark")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors border-l border-[#E5E7EB] dark:border-[#2A2A2A] ${
-            value === "dark"
-              ? "bg-[#C9A96E] text-[#111827]"
-              : "bg-transparent text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#F8F9FA] dark:hover:bg-white/5"
-          }`}
-        >
-          <Moon className="w-3.5 h-3.5" /> Sombre
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card title="Informations de la boutique" onSave={saveStoreInfo} saving={savingStore}>
@@ -266,38 +221,6 @@ const Parametres = () => {
           </div>
         </div>
       </Card>
-
-      <div className="lg:col-span-2 bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-lg p-5 space-y-2">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <div>
-            <h3 className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">Apparence</h3>
-            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
-              Les thèmes du site client et du panneau d'administration sont indépendants.
-            </p>
-          </div>
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-[#E5E7EB] dark:border-[#2A2A2A] text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] hover:bg-[#F8F9FA] dark:hover:bg-white/5"
-          >
-            Voir le site <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-        <ThemeRow
-          label="Thème du site client"
-          description="S'applique à toutes les pages publiques (/, /collection, /parfum…)."
-          value={customerTheme}
-          onChange={setCustomerTheme}
-        />
-        <div className="border-t border-[#E5E7EB] dark:border-[#2A2A2A]" />
-        <ThemeRow
-          label="Thème du panneau d'administration"
-          description="S'applique uniquement aux pages /admin."
-          value={adminTheme}
-          onChange={setAdminTheme}
-        />
-      </div>
 
       <div className="lg:col-span-2 bg-[#FFFFFF] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#2A2A2A] rounded-lg p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
