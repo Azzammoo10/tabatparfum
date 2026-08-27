@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Truck, ShieldCheck, Mail, Sparkles, MessageSquare, Instagram } from "lucide-react";
+import { MessageSquare, Sparkles, Instagram, ShieldCheck, Truck } from "lucide-react";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg
@@ -13,50 +14,45 @@ const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 );
 
 const Footer = () => {
+  const { settings } = useAppSettings();
+
+  const rawPhone = settings.whatsapp_phone || settings.store_phone || "212752850156";
+  const waNumber = rawPhone.replace(/[^0-9]/g, "") || "212752850156";
+  const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Bonjour TABAT, je souhaite avoir des informations sur vos parfums.")}`;
+  const instagramUrl = settings.instagram_url || "https://www.instagram.com/tabatperfumes";
+
   return (
-    <footer className="w-full bg-card/60 border-t border-border text-foreground pt-12 md:pt-16 pb-8 px-4 sm:px-6 mt-16 md:mt-28">
+    <footer className="w-full bg-card/70 border-t border-border text-foreground pt-12 md:pt-16 pb-8 px-4 sm:px-6 mt-20 md:mt-32">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-10 md:mb-14">
-          {/* Column 1: Brand Info */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-10 md:mb-12">
+          {/* Col 1: Brand Identity */}
+          <div className="space-y-3.5">
             <Link
               to="/"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               className="inline-block transition-transform hover:scale-105 cursor-pointer"
-              aria-label="TABAT - Retour en haut"
+              aria-label="TABAT - Accueil"
             >
               <img
                 src="/logo.png"
                 alt="TABAT"
-                className="h-10 md:h-12 w-auto object-contain dark:invert"
+                className="h-9 md:h-11 w-auto object-contain dark:invert"
               />
             </Link>
-            <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">
               Haute Parfumerie & Décantation
             </p>
-            <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed max-w-sm">
-              Sélection rigoureuse des plus grandes maisons de parfum. Flacons originaux et échantillons décantés de 5ml à 10ml livrés partout au Maroc.
+            <p className="text-xs font-light text-muted-foreground leading-relaxed max-w-xs">
+              Sélection exclusive des plus grandes maisons de parfum. Flacons originaux & décants nomades 5ml & 10ml livrés partout au Maroc.
             </p>
-            <div className="pt-1">
-              <a
-                href="https://www.instagram.com/tabatperfumes"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram TABAT"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-background/50 hover:border-primary hover:text-primary text-xs font-medium transition-all duration-200"
-              >
-                <Instagram className="w-3.5 h-3.5 text-primary" />
-                <span>@tabatperfumes</span>
-              </a>
-            </div>
           </div>
 
-          {/* Column 2: Collections */}
+          {/* Col 2: Collections Links */}
           <div>
-            <h4 className="text-xs uppercase tracking-[0.25em] text-primary font-bold mb-4">
-              Nos Collections
+            <h4 className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-4">
+              Collections
             </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm font-light text-muted-foreground">
+            <ul className="space-y-2.5 text-xs font-light text-muted-foreground">
               <li>
                 <Link to="/collection/homme" className="hover:text-primary transition-colors">
                   Parfums Homme
@@ -74,7 +70,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/collection/packs" className="hover:text-primary transition-colors font-medium text-primary">
-                  LES PACKS
+                  Packs & Coffrets
                 </Link>
               </li>
               <li>
@@ -85,102 +81,76 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 3: Service Client & Engagements */}
+          {/* Col 3: Assistance & Client */}
           <div>
-            <h4 className="text-xs uppercase tracking-[0.25em] text-primary font-bold mb-4">
-              Assistance & Engagements
+            <h4 className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-4">
+              Informations
             </h4>
-            <div className="space-y-3.5 text-xs sm:text-sm font-light text-muted-foreground">
-              <div className="flex flex-col gap-1.5 mb-2">
-                <Link
-                  to="/about"
-                  className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary-hover transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" /> À Propos de TABAT
+            <ul className="space-y-2.5 text-xs font-light text-muted-foreground">
+              <li>
+                <Link to="/about" className="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>À Propos de TABAT</span>
                 </Link>
-                <Link
-                  to="/about/service-client"
-                  className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary-hover transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4" /> Service Client & Contact
+              </li>
+              <li>
+                <Link to="/about/service-client" className="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                  <span>Service Client & Contact</span>
                 </Link>
-              </div>
+              </li>
+              <li className="pt-1 text-[11px] text-muted-foreground/80 flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-primary" />
+                <span>Livraison Express 24–48h Maroc</span>
+              </li>
+              <li className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                <span>Paiement Cash à la Réception</span>
+              </li>
+            </ul>
+          </div>
 
+          {/* Col 4: Direct Contact & Socials */}
+          <div>
+            <h4 className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-4">
+              Nous Contacter
+            </h4>
+            <div className="space-y-3">
               <a
-                href="https://wa.me/212752850156?text=Bonjour%20TABAT%2C%20je%20souhaite%20avoir%20des%20informations%20sur%20vos%20parfums%20et%20passer%20commande."
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-2.5 hover:text-emerald-500 transition-colors group cursor-pointer"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-foreground hover:bg-[#25D366]/20 transition-all group cursor-pointer"
               >
-                <WhatsAppIcon className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                <div>
-                  <p className="font-medium text-foreground text-xs uppercase tracking-wider group-hover:text-emerald-500 transition-colors">WhatsApp Direct</p>
-                  <p className="text-xs">+212 752-850156</p>
+                <WhatsAppIcon className="w-4 h-4 text-[#25D366] shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-xs text-[#25D366]">WhatsApp Direct</p>
+                  <p className="text-[11px] text-muted-foreground truncate">+{waNumber}</p>
                 </div>
               </a>
 
               <a
-                href="https://www.instagram.com/tabatperfumes"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-2.5 hover:text-primary transition-colors group cursor-pointer"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-primary/10 border border-primary/30 text-foreground hover:bg-primary/20 transition-all group cursor-pointer"
               >
-                <Instagram className="w-4 h-4 text-primary shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                <div>
-                  <p className="font-medium text-foreground text-xs uppercase tracking-wider group-hover:text-primary transition-colors">Instagram</p>
-                  <p className="text-xs">@tabatperfumes</p>
+                <Instagram className="w-4 h-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-xs text-primary">Instagram Officiel</p>
+                  <p className="text-[11px] text-muted-foreground truncate">@tabatperfumes</p>
                 </div>
               </a>
-
-              <div className="flex items-start gap-2.5">
-                <Truck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground text-xs uppercase tracking-wider">Livraison Express</p>
-                  <p className="text-xs">24–48h partout au Maroc</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground text-xs uppercase tracking-wider">Paiement Sécurisé</p>
-                  <p className="text-xs">Règlement à la livraison</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Bottom copyright bar */}
-        <div className="border-t border-border/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-xs font-light text-muted-foreground/80">
-            © {new Date().getFullYear()} TABAT. Tous droits réservés.
-          </p>
-          <div className="flex items-center gap-4 text-xs font-light text-muted-foreground/80">
-            <a
-              href="https://wa.me/212752850156?text=Bonjour%20TABAT%2C%20je%20souhaite%20avoir%20des%20informations%20sur%20vos%20parfums%20et%20passer%20commande."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-emerald-500 flex items-center gap-1.5 transition-colors"
-            >
-              <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-500" />
-              <span>WhatsApp</span>
-            </a>
-            <span>•</span>
-            <a
-              href="https://www.instagram.com/tabatperfumes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary flex items-center gap-1.5 transition-colors"
-            >
-              <Instagram className="w-3.5 h-3.5 text-primary" />
-              <span>Instagram</span>
-            </a>
-            <span>•</span>
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span>Haute Parfumerie au Maroc</span>
-            </div>
+        <div className="border-t border-border/70 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-xs font-light text-muted-foreground">
+          <p>© {new Date().getFullYear()} TABAT. Tous droits réservés.</p>
+          <div className="flex items-center gap-2 text-[11px]">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span>Maison de Parfumerie au Maroc</span>
           </div>
         </div>
       </div>

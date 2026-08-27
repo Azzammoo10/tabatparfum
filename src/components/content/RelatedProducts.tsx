@@ -12,26 +12,40 @@ interface RelatedProductsProps {
 const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsProps) => {
   const { data: allParfums, loading } = useParfums();
 
-  // 1. Filter products from the SAME maison/provider (excluding current product)
-  const sameMaison = allParfums.filter(
+  // Filter out current product AND out of stock / inactive products
+  const availableParfums = allParfums.filter((p) => {
+    if (p.id === currentParfumId) return false;
+    const isFull = p.sale_mode === "full_bottle";
+    const decantStock = (p.stock_5ml ?? 0) + (p.stock_10ml ?? 0);
+    const outOfStock =
+      !p.is_active ||
+      p.stock_status === "rupture" ||
+      (isFull ? (p.full_bottle_stock ?? 0) <= 0 : decantStock <= 0);
+    return !outOfStock;
+  });
+
+  // 1. Filter products from the SAME maison/provider
+  const sameMaison = availableParfums.filter(
     (p) =>
-      p.id !== currentParfumId &&
       maison &&
       p.maison.trim().toLowerCase() === maison.trim().toLowerCase()
   );
 
-  // 2. Fallback products if same maison has fewer than 4 items
-  const otherParfums = allParfums.filter(
+  // 2. Fallback products if same maison has fewer items
+  const otherParfums = availableParfums.filter(
     (p) =>
-      p.id !== currentParfumId &&
-      (!maison || p.maison.trim().toLowerCase() !== maison.trim().toLowerCase())
+      !maison || p.maison.trim().toLowerCase() !== maison.trim().toLowerCase()
   );
 
   // Combine: Prioritize same provider first
   const related = [...sameMaison, ...otherParfums].slice(0, 4);
 
+  if (!loading && related.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="w-full mt-20 sm:mt-32 pt-10 border-t border-border/40 max-w-7xl mx-auto">
+    <section className="w-full mt-10 sm:mt-24 pt-6 sm:pt-10 border-t border-border/40 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-end justify-between mb-6 sm:mb-8 pb-3 border-b border-border/40">
         <div>
@@ -64,20 +78,13 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {related.map((p) => {
             const isFull = p.sale_mode === "full_bottle";
-            const decantStock = (p.stock_5ml ?? 0) + (p.stock_10ml ?? 0);
-            const outOfStock =
-              !p.is_active ||
-              p.stock_status === "rupture" ||
-              (isFull ? (p.full_bottle_stock ?? 0) <= 0 : decantStock <= 0);
 
             return (
               <Link
                 key={p.id}
                 to={`/parfum/${p.id}`}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className={`group block rounded-2xl p-2 sm:p-3 transition-all hover:bg-card/40 relative text-left ${
-                  outOfStock ? "opacity-75" : ""
-                }`}
+                className="group block rounded-2xl p-2 sm:p-3 transition-all hover:bg-card/40 relative text-left"
               >
                 <div className="relative mb-2 overflow-hidden rounded-xl bg-muted/40">
                   <ProductImage
@@ -86,32 +93,18 @@ const RelatedProducts = ({ currentParfumId, maison, gender }: RelatedProductsPro
                     label={p.image_label}
                     aspect="aspect-[4/5]"
                     fitMode="contain"
-                    className={`max-h-48 sm:max-h-56 mx-auto transition-all duration-300 ${
-                      outOfStock ? "grayscale opacity-50 contrast-75" : "group-hover:scale-105"
-                    }`}
+                    className="max-h-48 sm:max-h-56 mx-auto transition-all duration-300 group-hover:scale-105"
                   />
-                  {outOfStock && (
-                    <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-2.5 py-0.5 rounded-full font-bold border border-zinc-700/60 shadow-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span>Rupture</span>
-                    </span>
-                  )}
                 </div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
                   {p.maison}
                 </p>
-                <h3 className={`font-serif text-xs sm:text-sm font-medium truncate mt-0.5 ${
-                  outOfStock ? "text-muted-foreground" : "text-foreground"
-                }`}>
+                <h3 className="font-serif text-xs sm:text-sm font-medium truncate mt-0.5 text-foreground">
                   {p.name}
                 </h3>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
-                  <span className={`text-xs font-serif font-bold ${
-                    outOfStock ? "text-muted-foreground line-through opacity-70" : "text-primary"
-                  }`}>
-                    {outOfStock
-                      ? "Rupture de stock"
-                      : isFull
+                  <span className="text-xs font-serif font-bold text-primary">
+                    {isFull
                       ? formatMAD(p.full_bottle_price ?? 0)
                       : `À partir de ${formatMAD(p.price_5ml)}`}
                   </span>

@@ -27,57 +27,57 @@ const kpis = [
 
 const EditorialSection = () => {
   return (
-    <section className="w-full mb-16 sm:mb-24 px-4 sm:px-6 max-w-7xl mx-auto">
+    <section className="w-full mb-10 sm:mb-24 px-3 sm:px-6 max-w-7xl mx-auto">
       {/* Section Header */}
-      <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-        <p className="text-xs uppercase tracking-[0.35em] text-primary font-medium mb-2.5">
+      <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-12">
+        <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-1.5">
           L'Engagement TABAT
         </p>
-        <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl text-foreground tracking-tight mb-3">
+        <h2 className="font-serif text-xl sm:text-4xl text-foreground tracking-tight mb-2 font-bold">
           Pourquoi Choisir <span className="text-primary italic font-serif">TABAT</span> ?
         </h2>
-        <div className="w-12 h-[1px] bg-primary/40 mx-auto" />
+        <div className="w-10 h-0.5 bg-primary/40 mx-auto rounded-full" />
       </div>
 
       {/* 3 KPI Luxury Banner / Grid */}
-      <div className="relative rounded-xl sm:rounded-2xl border border-primary/20 bg-card/30 backdrop-blur-md p-4 sm:p-10 shadow-sm overflow-hidden">
+      <div className="relative rounded-2xl sm:rounded-3xl border border-primary/20 bg-card/40 backdrop-blur-md p-3 sm:p-8 shadow-sm overflow-hidden">
         {/* Subtle background glow pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-primary/15 relative z-10 gap-6 md:gap-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary/15 relative z-10 gap-3 sm:gap-0">
           {kpis.map((kpi, index) => {
             const Icon = kpi.icon;
             return (
               <div
                 key={index}
-                className="group relative px-2 sm:px-8 py-5 sm:py-6 transition-all duration-500 hover:bg-primary/[0.03] flex flex-col justify-between"
+                className="group relative px-3 sm:px-6 py-3.5 sm:py-6 transition-all duration-500 hover:bg-primary/[0.03] flex flex-col justify-between"
               >
                 {/* Number & Icon Row */}
                 <div>
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-primary/25 bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20 transition-all duration-500">
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-500 group-hover:scale-110" />
+                  <div className="flex items-center justify-between mb-2.5 sm:mb-5">
+                    <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full border border-primary/25 bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-500">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <span className="font-serif text-xl sm:text-2xl font-light text-primary/40 group-hover:text-primary transition-colors duration-500">
+                    <span className="font-serif text-lg sm:text-2xl font-light text-primary/40 group-hover:text-primary transition-colors duration-500">
                       {kpi.number}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-serif text-lg sm:text-2xl text-foreground mb-1.5 sm:mb-2 group-hover:text-primary transition-colors duration-300">
+                  <h3 className="font-serif text-sm sm:text-xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
                     {kpi.title}
                   </h3>
 
                   {/* Main Description */}
-                  <p className="text-xs sm:text-sm font-light text-foreground/80 leading-relaxed mb-3 sm:mb-4">
+                  <p className="text-[11px] sm:text-sm font-light text-muted-foreground leading-relaxed mb-2.5 sm:mb-4">
                     {kpi.description}
                   </p>
                 </div>
 
                 {/* Footer Tag */}
-                <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[10px] sm:text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-300">
+                <div className="pt-2 border-t border-primary/10 flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-300">
                   <span>{kpi.detail}</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary group-hover:scale-125 transition-all duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-all duration-300" />
                 </div>
               </div>
             );
@@ -86,12 +86,12 @@ const EditorialSection = () => {
       </div>
 
       {/* Bottom Link */}
-      <div className="mt-8 sm:mt-10 text-center">
+      <div className="mt-6 sm:mt-10 text-center">
         <Link
           to="/about/service-client"
-          className="inline-flex items-center gap-2 text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-primary hover:text-primary-hover hover:gap-3 transition-all font-medium py-2.5 px-6 rounded-full border border-primary/25 hover:border-primary/50 hover:bg-primary/5"
+          className="inline-flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-primary hover:text-primary-hover hover:gap-3 transition-all font-semibold py-2 px-5 rounded-full border border-primary/25 hover:border-primary/50 hover:bg-primary/5"
         >
-          Service Client & Contact <ArrowRight size={14} />
+          Service Client & Contact <ArrowRight size={13} />
         </Link>
       </div>
     </section>

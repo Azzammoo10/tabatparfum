@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Send, CheckCircle2, MessageSquare, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 const HomeContactForm = () => {
+  const { settings } = useAppSettings();
   const [formData, setFormData] = useState({
     name: "",
     contact: "",
@@ -30,11 +32,13 @@ const HomeContactForm = () => {
 
   const handleWhatsappSend = () => {
     const text = `Bonjour TABAT,\nNom: ${formData.name}\nContact: ${formData.contact}\nSujet: ${formData.subject}\nMessage: ${formData.message}`;
-    window.open(`https://wa.me/212752850156?text=${encodeURIComponent(text)}`, "_blank");
+    const rawPhone = settings.whatsapp_phone || settings.store_phone || "212752850156";
+    const waNumber = rawPhone.replace(/[^0-9]/g, "") || "212752850156";
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   return (
-    <section className="w-full mb-24 px-4 sm:px-6 max-w-4xl mx-auto">
+    <section className="w-full mb-16 sm:mb-28 px-4 sm:px-6 max-w-4xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-xl mx-auto mb-10">
         <p className="text-xs uppercase tracking-[0.35em] text-primary font-medium mb-2.5">

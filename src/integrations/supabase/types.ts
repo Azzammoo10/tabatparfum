@@ -233,7 +233,6 @@ export type Database = {
           notes_fond: string[]
           notes_tete: string[]
           price_10ml: number
-          price_20ml: number
           price_5ml: number
           sale_mode: string
           stock_status: Database["public"]["Enums"]["stock_status"]
@@ -259,7 +258,6 @@ export type Database = {
           notes_fond?: string[]
           notes_tete?: string[]
           price_10ml?: number
-          price_20ml?: number
           price_5ml?: number
           sale_mode?: string
           stock_status?: Database["public"]["Enums"]["stock_status"]
@@ -285,7 +283,6 @@ export type Database = {
           notes_fond?: string[]
           notes_tete?: string[]
           price_10ml?: number
-          price_20ml?: number
           price_5ml?: number
           sale_mode?: string
           stock_status?: Database["public"]["Enums"]["stock_status"]

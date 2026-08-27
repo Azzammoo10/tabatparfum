@@ -11,7 +11,6 @@ export const SIZE_META: Record<Size, { label: string; sub: string }> = {
 type PriceSource = {
   price_5ml: number;
   price_10ml: number;
-  price_20ml?: number;
   full_bottle_price?: number | null;
 };
 

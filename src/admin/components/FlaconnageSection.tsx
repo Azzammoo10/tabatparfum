@@ -103,7 +103,7 @@ const Row = ({ s, onSave }: { s: FlaconStats; onSave: (stock: number, threshold:
 
 const FlaconnageSection = () => {
   const { stats, loading, error, update } = useFlaconnage();
-  const lowCount = stats.filter((s) => s.isLow).length;
+  const lowCount = stats.filter((s) => s.isLow && (s.size as string) !== "20ml").length;
 
   const onSave = (size: FlaconStats["size"]) => async (stock: number, low_threshold: number) => {
     const res = await update(size, { stock, low_threshold });
@@ -136,9 +136,11 @@ const FlaconnageSection = () => {
         <p className="text-sm text-muted-foreground py-6">Chargement…</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {stats.map((s) => (
-            <Row key={s.size} s={s} onSave={onSave(s.size)} />
-          ))}
+          {stats
+            .filter((s) => (s.size as string) !== "20ml")
+            .map((s) => (
+              <Row key={s.size} s={s} onSave={onSave(s.size)} />
+            ))}
         </div>
       )}
     </section>

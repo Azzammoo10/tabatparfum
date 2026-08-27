@@ -33,7 +33,6 @@ const formatStaticParfums = (): Parfum[] => {
       notes_fond: p.notes?.fond ?? [],
       price_5ml: p.prices?.['5ml'] ?? 0,
       price_10ml: p.prices?.['10ml'] ?? 0,
-      price_20ml: p.prices?.['20ml'] ?? 0,
       image_label: p.imageLabel,
       image_url: p.image_url ?? null,
       is_active: inStock,

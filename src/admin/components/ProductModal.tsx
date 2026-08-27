@@ -251,11 +251,9 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
     // Map formats to prices and stocks
     const f5 = formats.find((item) => item.ml === 5);
     const f10 = formats.find((item) => item.ml === 10);
-    const f20 = formats.find((item) => item.ml === 20);
 
     const safeP5 = isFull ? fbPrice : Number(f5?.price || 0);
     const safeP10 = isFull ? fbPrice : Number(f10?.price || 0);
-    const safeP20 = isFull ? 0 : Number(f20?.price || 0);
 
     const stock5 = isFull ? 0 : Math.max(0, Number(f5?.stock) || 0);
     const stock10 = isFull ? 0 : Math.max(0, Number(f10?.stock) || 0);
@@ -271,7 +269,6 @@ const ProductModal = ({ open, onOpenChange, initial }: Props) => {
       prices: {
         "5ml": safeP5,
         "10ml": safeP10,
-        "20ml": safeP20,
       },
       imageLabel: f.imageLabel.trim() || slugify(f.name) || "produit",
       image_url: f.imageUrl || null,

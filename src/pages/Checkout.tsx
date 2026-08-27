@@ -83,30 +83,26 @@ const Checkout = () => {
 
   const buildWhatsAppMessage = (orderNum: string) => {
     const lines: string[] = [];
-    lines.push(`*COMMANDE TABAT : ${orderNum}*`);
-    lines.push("═════════════════════════");
+    lines.push(`Bonjour TABAT,`);
     lines.push("");
-    lines.push("*ARTICLES SÉLECTIONNÉS :*");
+    lines.push(`Je souhaite commander (#${orderNum}) :`);
     items.forEach((item) => {
       lines.push(
-        `• ${item.maison} — ${item.name} (${SIZE_META[item.size]?.label || item.size}) ×${item.quantity}`
+        `- ${item.maison} - ${item.name} (${SIZE_META[item.size]?.label || item.size}) x${item.quantity}`
       );
     });
     lines.push("");
-    lines.push("*COORDONNÉES CLIENT :*");
-    lines.push(`• *Nom & Prénom* : ${fullName.trim()}`);
-    lines.push(`• *Téléphone* : ${phone.trim()}`);
-    lines.push(`• *Ville* : ${city.trim()}`);
-    lines.push(`• *Adresse de Livraison* : ${address.trim()}`);
+    lines.push(`Livraison :`);
+    lines.push(`- Nom : ${fullName.trim()}`);
+    lines.push(`- Tél : ${phone.trim()}`);
+    lines.push(`- Ville : ${city.trim()}`);
+    lines.push(`- Adresse : ${address.trim()}`);
     if (notes.trim()) {
-      lines.push(`• *Note* : ${notes.trim()}`);
+      lines.push(`- Note : ${notes.trim()}`);
     }
     lines.push("");
-    lines.push("*LIVRAISON & PAIEMENT :*");
-    lines.push(`• *Mode de paiement* : Espèces à la livraison (COD)`);
-    lines.push(`• *Total & Frais de Livraison* : À confirmer par le vendeur selon votre ville (${city.trim()})`);
-    lines.push("═════════════════════════");
-    lines.push("Merci de me confirmer le montant total avec la livraison.");
+    lines.push(`Total produits : ${formatMAD(total)}`);
+    lines.push(`Merci de me confirmer le montant total avec la livraison.`);
     return encodeURIComponent(lines.join("\n"));
   };
 

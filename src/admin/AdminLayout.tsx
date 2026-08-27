@@ -107,33 +107,19 @@ const AdminLayout = () => {
   };
 
   const SidebarContent = (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0e131f] via-[#111827] to-[#0a0e17] text-[#F9FAFB] border-r border-white/5 shadow-2xl overflow-y-auto">
-      {/* Brand Header */}
-      <div className="px-5 py-5 border-b border-white/10 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <Link to="/admin" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#C9A96E] to-[#8d713c] p-0.5 shadow-md shadow-[#C9A96E]/20 flex items-center justify-center shrink-0">
-              <img
-                src="/logo.png"
-                alt="TABAT"
-                className="w-full h-full object-contain p-1 invert"
-              />
-            </div>
-            <div>
-              <span className="font-serif text-base font-bold tracking-wider text-white block leading-tight group-hover:text-[#C9A96E] transition-colors">
-                TABAT
-              </span>
-              <span className="text-[10px] text-[#C9A96E] uppercase tracking-[0.2em] font-medium block">
-                Maison de Parfum
-              </span>
-            </div>
-          </Link>
-
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0e131f] via-[#111827] to-[#0a0e17] text-[#F9FAFB] border-r border-white/5 shadow-2xl overflow-y-auto no-scrollbar">
+      {/* Brand Header: Logo TABAT + Admin Panel text underneath */}
+      <div className="px-5 py-5 border-b border-white/10 flex flex-col items-center justify-center text-center">
+        <Link to="/admin" className="flex flex-col items-center gap-1.5 group">
+          <img
+            src="/logo.png"
+            alt="TABAT Admin"
+            className="h-9 w-auto object-contain invert transition-transform group-hover:scale-105"
+          />
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#C9A96E] group-hover:text-white transition-colors">
+            Admin Panel
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation Sections */}
@@ -203,6 +189,17 @@ const AdminLayout = () => {
           </div>
         ))}
       </nav>
+
+      {/* Sidebar Footer / Déconnexion */}
+      <div className="p-3 border-t border-white/10 mt-auto">
+        <button
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all cursor-pointer border border-red-500/20"
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span>Déconnexion</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -262,6 +259,16 @@ const AdminLayout = () => {
             <div className="w-8 h-8 rounded-full bg-[#111827] dark:bg-[#C9A96E] text-white dark:text-[#111827] font-bold flex items-center justify-center text-xs shadow-xs">
               A
             </div>
+
+            {/* Added Déconnexion Button */}
+            <button
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer"
+              title="Se déconnecter"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Déconnexion</span>
+            </button>
           </div>
         </header>
 

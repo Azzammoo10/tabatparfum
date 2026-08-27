@@ -259,24 +259,24 @@ const ParfumDetail = () => {
           </Breadcrumb>
 
           {/* MAIN PRODUCT CLEAN & AIRY GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 lg:gap-10 items-start">
             {/* LEFT COLUMN: Crystal Clear Product Image + Flacon Preview */}
             <div className="md:col-span-5 w-full space-y-3 md:sticky md:top-24">
-              <div className="relative group overflow-hidden rounded-2xl">
+              <div className="relative group overflow-hidden rounded-2xl bg-card/30 border border-border/60">
                 <ProductImage
                   src={parfum.image_url}
                   alt={parfum.name}
                   label={parfum.image_label}
                   aspect="aspect-[4/5]"
                   fitMode="cover"
-                  className={`max-h-[260px] sm:max-h-[380px] md:max-h-[440px] w-full mx-auto transition-all duration-500 ${
+                  className={`max-h-[280px] sm:max-h-[380px] md:max-h-[440px] w-full mx-auto transition-all duration-500 ${
                     outOfStock ? "grayscale opacity-60 contrast-75" : ""
                   }`}
                 />
 
                 {outOfStock && (
-                  <span className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-3 py-1 rounded-full font-bold border border-zinc-700/60 shadow-lg">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] uppercase tracking-widest bg-zinc-900/90 dark:bg-zinc-800/90 text-zinc-200 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full font-bold border border-zinc-700/60 shadow-lg">
+                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-500 animate-pulse" />
                     <span>Rupture de Stock</span>
                   </span>
                 )}
@@ -284,36 +284,36 @@ const ParfumDetail = () => {
                 {/* Glass Spray Bottle Badge Preview */}
                 {!isFullBottle && !outOfStock && (
                   <div
-                    className="absolute top-3 right-3 z-20 bg-background/95 dark:bg-black/90 backdrop-blur-md border border-primary/50 rounded-2xl p-2.5 shadow-xl animate-in zoom-in-95 fade-in duration-300 flex flex-col items-center gap-1 min-w-[68px]"
+                    className="absolute top-2.5 right-2.5 z-20 bg-background/95 dark:bg-black/90 backdrop-blur-md border border-primary/50 rounded-2xl p-2 sm:p-2.5 shadow-xl animate-in zoom-in-95 fade-in duration-300 flex flex-col items-center gap-1 min-w-[60px] sm:min-w-[68px]"
                   >
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
+                      <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-primary font-bold">
                         {quantities["10ml"] > 0 ? "10ml" : quantities["5ml"] > 0 ? "5ml" : "Decant"}
                       </span>
-                      <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                      <Sparkles className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-primary animate-pulse" />
                     </div>
 
                     <div className="flex flex-col items-center py-0.5">
                       <div
                         className="rounded-t-[3px] shadow-sm relative"
                         style={{
-                          width: "14px",
-                          height: quantities["10ml"] > 0 ? "18px" : "14px",
+                          width: "12px",
+                          height: quantities["10ml"] > 0 ? "16px" : "12px",
                           background: "linear-gradient(180deg, #111111 0%, #333333 40%, #0a0a0a 100%)",
                         }}
                       />
                       <div
                         className="border-x-2 border-b-2 border-primary/80 bg-gradient-to-b from-primary/10 via-primary/30 to-primary/15 rounded-b-[4px] relative shadow-inner"
                         style={{
-                          width: "12px",
-                          height: quantities["10ml"] > 0 ? "65px" : "42px",
+                          width: "10px",
+                          height: quantities["10ml"] > 0 ? "55px" : "36px",
                         }}
                       >
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[90%] bg-foreground/50" />
                       </div>
                     </div>
 
-                    <p className="text-[7.5px] text-primary font-bold text-center">
+                    <p className="text-[7px] sm:text-[7.5px] text-primary font-bold text-center">
                       {totalQuantity > 0 ? `${totalQuantity} flacon${totalQuantity > 1 ? "s" : ""}` : "Flacons Verre"}
                     </p>
                   </div>
@@ -337,15 +337,15 @@ const ParfumDetail = () => {
             <div className="md:col-span-7 space-y-4">
               {/* Header Info Block */}
               <div className="space-y-1">
-                <span className="text-xs uppercase tracking-[0.25em] text-primary font-bold block">
+                <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-bold block">
                   {parfum.maison}
                 </span>
 
-                <div className="flex items-center flex-wrap gap-2">
-                  <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-medium leading-tight">
-                    {parfum.name}
-                  </h1>
+                <h1 className="font-serif text-xl sm:text-2xl md:text-3xl text-foreground font-semibold leading-tight">
+                  {parfum.name}
+                </h1>
 
+                <div className="flex items-center flex-wrap gap-1.5 pt-1">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full border border-border/60 font-medium">
                     {parfum.gender}
                   </span>
@@ -359,17 +359,17 @@ const ParfumDetail = () => {
               </div>
 
               {/* Multi-Format / Size Selection Cards with Independent Quantities */}
-              <div className="space-y-2.5 pt-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
-                    <Droplets className="w-3.5 h-3.5 text-primary" /> Choix des Formats & Quantités
+              <div className="space-y-2 pt-1">
+                <div className="flex justify-between items-center flex-wrap gap-1">
+                  <span className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-foreground flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-primary shrink-0" /> Choix des Formats & Quantités
                   </span>
-                  <span className="text-[11px] text-muted-foreground font-medium">
-                    Sélectionnez la quantité souhaitée par format
+                  <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium">
+                    Sélectionnez la quantité souhaitée
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                   {availableSizes.map((s) => {
                     const formatLabel =
                       s === "full"
@@ -403,30 +403,30 @@ const ParfumDetail = () => {
                     return (
                       <div
                         key={s}
-                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                        className={`p-3 sm:p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-2 sm:gap-3 ${
                           isFormatOutOfStock
                             ? "opacity-50 border-border/50 bg-muted/20 cursor-not-allowed"
                             : isSelected
-                            ? "border-primary bg-primary/10 shadow-sm"
+                            ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30"
                             : "border-border/80 bg-card/40 hover:border-primary/40"
                         }`}
                       >
                         {/* Format Info */}
                         <div
-                          className={`flex-1 select-none ${isFormatOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                          className={`flex-1 min-w-0 select-none ${isFormatOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                           onClick={() => {
                             if (!isFormatOutOfStock) setDirectSizeQty(s, 1);
                           }}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className={`font-serif text-base font-bold ${isFormatOutOfStock ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`font-serif text-sm sm:text-base font-bold ${isFormatOutOfStock ? "text-muted-foreground line-through" : "text-foreground"}`}>
                               {formatLabel}
                             </span>
-                            <span className="text-[10px] text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full border border-border/50">
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full border border-border/50 truncate">
                               {formatSub}
                             </span>
                             {isFormatOutOfStock && (
-                              <span className="text-[9px] font-bold text-destructive uppercase tracking-wider bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20">
+                              <span className="text-[9px] font-bold text-destructive uppercase tracking-wider bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20 shrink-0">
                                 Épuisé
                               </span>
                             )}
@@ -438,8 +438,8 @@ const ParfumDetail = () => {
                         </div>
 
                         {/* Individual Quantity Stepper */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <div className={`flex items-center border rounded-full px-1.5 py-0.5 shadow-xs ${
+                        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                          <div className={`flex items-center border rounded-full px-1 sm:px-1.5 py-0.5 shadow-xs ${
                             isFormatOutOfStock ? "border-border/40 bg-muted/40 opacity-40" : "border-border bg-background"
                           }`}>
                             <button
@@ -448,13 +448,13 @@ const ParfumDetail = () => {
                                 e.stopPropagation();
                                 if (!isFormatOutOfStock) updateSizeQty(s, -1);
                               }}
-                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                               disabled={qty === 0 || isFormatOutOfStock}
                               aria-label={`Diminuer ${formatLabel}`}
                             >
-                              <Minus size={13} />
+                              <Minus size={12} />
                             </button>
-                            <span className="w-8 text-center text-sm font-semibold text-foreground">
+                            <span className="w-6 sm:w-8 text-center text-xs sm:text-sm font-semibold text-foreground select-none">
                               {qty}
                             </span>
                             <button
@@ -463,11 +463,11 @@ const ParfumDetail = () => {
                                 e.stopPropagation();
                                 if (!isFormatOutOfStock) updateSizeQty(s, 1);
                               }}
-                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-7 w-7 flex items-center justify-center rounded-full text-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                               disabled={isFormatOutOfStock || (typeof formatStock === "number" && qty >= formatStock)}
                               aria-label={`Augmenter ${formatLabel}`}
                             >
-                              <Plus size={13} />
+                              <Plus size={12} />
                             </button>
                           </div>
                         </div>

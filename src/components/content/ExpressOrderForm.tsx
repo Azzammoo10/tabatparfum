@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { User, Phone, MapPin, Sparkles, CheckCircle2, ShoppingBag, AlertCircle, Bell, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { POPULAR_CITIES, searchMoroccanCities } from "@/data/moroccanCities";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 export interface OrderSelectionItem {
   size: string;
@@ -33,12 +34,13 @@ const ExpressOrderForm = ({
   parfumName,
   maison,
   items,
-  sizeLabel,
-  quantity,
+  sizeLabel = "10ml",
+  quantity = 1,
   totalPrice,
   onAddToCart,
-  outOfStock,
+  outOfStock = false,
 }: ExpressOrderFormProps) => {
+  const { settings } = useAppSettings();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("Casablanca");
@@ -145,36 +147,32 @@ const ExpressOrderForm = ({
       console.warn("Exception lors de l'enregistrement de la commande:", err);
     }
 
-    // Build personalized luxury WhatsApp message
+    // Build concise, clean WhatsApp message without emojis
     const formattedItemsLines = activeItems
-      .map((it) => `  ▫️ *${it.sizeLabel}* × ${it.quantity}`)
+      .map((it) => `- ${it.sizeLabel} x${it.quantity}`)
       .join("\n");
 
     const message = [
-      `*NOUVELLE COMMANDE TABAT (#${orderNumber})*`,
-      "═══════════════════════",
+      `Bonjour TABAT,`,
       "",
-      "*DÉTAILS DE LA COMMANDE*",
-      `• *Maison* : ${maison}`,
-      `• *Parfum* : ${parfumName}`,
-      `• *Formats & Quantités* :`,
+      `Je souhaite commander (#${orderNumber}) :`,
+      `- Produit : ${maison} - ${parfumName}`,
       formattedItemsLines,
       "",
-      "*INFORMATIONS DE LIVRAISON*",
-      `• *Nom & Prénom* : ${fullName.trim()}`,
-      `• *Téléphone* : ${phone.trim()}`,
-      `• *Ville* : ${city.trim()}`,
-      `• *Adresse de Livraison* : ${address.trim()}`,
+      `Livraison :`,
+      `- Nom : ${fullName.trim()}`,
+      `- Tél : ${phone.trim()}`,
+      `- Ville : ${city.trim()}`,
+      `- Adresse : ${address.trim()}`,
       "",
-      "*PAIEMENT & TOTAL*",
-      "• Paiement à la livraison (COD)",
-      `*(Le montant total avec les frais de livraison pour ${city.trim()} vous sera confirmé par le vendeur)*`,
-      "═══════════════════════",
-      "Merci de me confirmer ma commande !",
+      `Total produits : ${formatMAD(totalPrice)}`,
+      `Merci de me confirmer le montant total avec la livraison.`,
     ].join("\n");
 
     const encoded = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${TABAT_WHATSAPP}?text=${encoded}`;
+    const targetPhoneRaw = settings.whatsapp_phone || settings.store_phone || "212752850156";
+    const targetWaNumber = targetPhoneRaw.replace(/[^0-9]/g, "") || "212752850156";
+    const whatsappUrl = `https://wa.me/${targetWaNumber}?text=${encoded}`;
 
     window.open(whatsappUrl, "_blank");
     setIsSubmitting(false);
@@ -182,8 +180,10 @@ const ExpressOrderForm = ({
   };
 
   if (outOfStock) {
+    const targetPhoneRaw = settings.whatsapp_phone || settings.store_phone || "212752850156";
+    const targetWaNumber = targetPhoneRaw.replace(/[^0-9]/g, "") || "212752850156";
     const notifyMsg = `Bonjour, je souhaite être notifié(e) du retour en stock du parfum : ${maison} — ${parfumName}`;
-    const notifyUrl = `https://wa.me/${TABAT_WHATSAPP}?text=${encodeURIComponent(notifyMsg)}`;
+    const notifyUrl = `https://wa.me/${targetWaNumber}?text=${encodeURIComponent(notifyMsg)}`;
 
     return (
       <div className="relative overflow-hidden bg-card/90 backdrop-blur-md border-2 border-border/80 rounded-2xl p-5 space-y-4 shadow-xl text-center animate-in fade-in zoom-in-95">
@@ -221,57 +221,57 @@ const ExpressOrderForm = ({
   return (
     <form
       onSubmit={handleWhatsAppOrder}
-      className="relative overflow-hidden bg-card/90 backdrop-blur-md border-2 border-primary/40 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xl transition-all duration-300 hover:border-primary animate-in fade-in zoom-in-95"
+      className="relative overflow-hidden bg-card/90 backdrop-blur-md border-2 border-primary/40 rounded-2xl p-3.5 sm:p-5 space-y-3 sm:space-y-3.5 shadow-xl transition-all duration-300 hover:border-primary animate-in fade-in zoom-in-95"
     >
       {/* Glow highlight background ornament */}
       <div className="absolute -top-12 -right-12 w-28 h-28 bg-primary/15 rounded-full blur-2xl pointer-events-none" />
 
       {/* DYNAMICALLY UPDATED FORMAT & PRICE SUMMARY BANNER */}
       <div
-        className="bg-primary/10 border border-primary/40 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-300"
+        className="bg-primary/10 border border-primary/40 rounded-xl p-2.5 sm:p-3 flex flex-row items-center justify-between gap-2 animate-in fade-in duration-300"
       >
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
+            <div className="flex items-center gap-1 flex-wrap">
               {activeItems.length > 0 ? (
                 activeItems.map((it, idx) => (
                   <span
                     key={idx}
-                    className="text-xs uppercase tracking-wider font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-md"
+                    className="text-[10px] sm:text-xs uppercase tracking-wider font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-md truncate"
                   >
                     {it.sizeLabel} × {it.quantity}
                   </span>
                 ))
               ) : (
-                <span className="text-xs uppercase tracking-wider font-bold text-destructive">
+                <span className="text-[10px] sm:text-xs uppercase tracking-wider font-bold text-destructive">
                   Aucun format sélectionné
                 </span>
               )}
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground font-light mt-1">
+          <p className="text-[9.5px] sm:text-[10px] text-muted-foreground font-light mt-0.5 truncate">
             {maison} — {parfumName}
           </p>
         </div>
 
-        <div className="text-left sm:text-right">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
+        <div className="text-right shrink-0">
+          <span className="text-[8.5px] sm:text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
             Prix Total
           </span>
-          <span className="text-base sm:text-lg font-serif font-bold text-primary">
+          <span className="text-sm sm:text-lg font-serif font-bold text-primary">
             {formatMAD(totalPrice)}
           </span>
         </div>
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+      <div className="flex items-center justify-between border-b border-border/50 pb-2 flex-wrap gap-1">
         <h3 className="font-serif text-xs sm:text-sm font-semibold text-foreground tracking-wide">
           Informations de Livraison
         </h3>
 
-        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+        <span className="text-[8.5px] sm:text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
           <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />
           <span>Paiement à la livraison</span>
         </span>
@@ -297,7 +297,7 @@ const ExpressOrderForm = ({
             onFocus={() => setFocusedField("fullName")}
             onBlur={() => setFocusedField(null)}
             onChange={(e) => setFullName(e.target.value)}
-            className={`h-9.5 text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
+            className={`h-9.5 text-[13px] sm:text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
               focusedField === "fullName" ? "border-primary ring-2 ring-primary/20" : ""
             }`}
           />
@@ -319,12 +319,12 @@ const ExpressOrderForm = ({
             id="phone"
             type="tel"
             required
-            placeholder="0663848099"
+            placeholder="0600000000"
             value={phone}
             onFocus={() => setFocusedField("phone")}
             onBlur={() => setFocusedField(null)}
             onChange={(e) => setPhone(e.target.value)}
-            className={`h-9.5 text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
+            className={`h-9.5 text-[13px] sm:text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
               focusedField === "phone" ? "border-primary ring-2 ring-primary/20" : ""
             }`}
           />
@@ -353,7 +353,7 @@ const ExpressOrderForm = ({
                   setCityQuery(c);
                   setShowCityDropdown(false);
                 }}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-md text-[9.5px] sm:text-[10px] font-medium transition-all cursor-pointer ${
                   city.toLowerCase() === c.toLowerCase()
                     ? "bg-primary text-primary-foreground font-semibold"
                     : "bg-secondary/70 text-muted-foreground hover:text-foreground border border-border/50"
@@ -381,7 +381,7 @@ const ExpressOrderForm = ({
                 setCity(e.target.value);
                 setShowCityDropdown(true);
               }}
-              className={`h-9.5 text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
+              className={`h-9.5 text-[13px] sm:text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
                 focusedField === "city" ? "border-primary ring-2 ring-primary/20" : ""
               }`}
             />
@@ -433,7 +433,7 @@ const ExpressOrderForm = ({
             onFocus={() => setFocusedField("address")}
             onBlur={() => setFocusedField(null)}
             onChange={(e) => setAddress(e.target.value)}
-            className={`h-9.5 text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
+            className={`h-9.5 text-[13px] sm:text-xs rounded-xl bg-background/80 border-border/80 transition-all ${
               focusedField === "address" ? "border-primary ring-2 ring-primary/20" : ""
             }`}
           />
@@ -446,7 +446,7 @@ const ExpressOrderForm = ({
           <Button
             type="button"
             onClick={onAddToCart}
-            className="w-full h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover uppercase tracking-[0.18em] text-[11px] font-bold shadow-md hover:scale-[1.01] transition-all gap-2"
+            className="w-full h-10 sm:h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover uppercase tracking-[0.14em] sm:tracking-[0.18em] text-[11px] font-bold shadow-md hover:scale-[1.01] transition-all gap-2 cursor-pointer"
           >
             <ShoppingBag className="w-3.5 h-3.5" /> Ajouter au Panier
           </Button>
@@ -455,9 +455,9 @@ const ExpressOrderForm = ({
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="relative overflow-hidden group w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold text-xs uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 gap-2"
+          className="relative overflow-hidden group w-full h-10 sm:h-11 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold text-[11px] sm:text-xs uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 gap-2 cursor-pointer"
         >
-          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-current shrink-0 group-hover:rotate-12 transition-transform duration-300" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="h-4 sm:h-4.5 w-4 sm:w-4.5 fill-current shrink-0 group-hover:rotate-12 transition-transform duration-300" aria-hidden="true">
             <path d="M20.52 3.48A11.86 11.86 0 0 0 12.02 0C5.5 0 .2 5.3.2 11.83c0 2.08.55 4.12 1.6 5.92L0 24l6.42-1.68a11.83 11.83 0 0 0 5.6 1.43h.01c6.52 0 11.82-5.3 11.82-11.83 0-3.16-1.23-6.13-3.33-8.44ZM12.03 21.7h-.01a9.85 9.85 0 0 1-5.02-1.38l-.36-.21-3.81 1 1.02-3.71-.24-.38a9.83 9.83 0 0 1-1.51-5.19c0-5.43 4.42-9.85 9.85-9.85 2.63 0 5.1 1.03 6.96 2.89a9.78 9.78 0 0 1 2.88 6.96c0 5.43-4.42 9.87-9.76 9.87Zm5.4-7.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.66.15-.2.3-.76.96-.93 1.15-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.04-.17-.3-.02-.46.13-.6.13-.13.3-.34.45-.51.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.66-1.6-.9-2.18-.24-.57-.48-.5-.66-.5l-.56-.01a1.08 1.08 0 0 0-.78.36c-.27.3-1.03 1.01-1.03 2.46 0 1.45 1.06 2.86 1.21 3.06.15.2 2.08 3.17 5.03 4.45.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.75-.71 2-1.4.25-.69.25-1.28.17-1.4-.07-.13-.27-.2-.57-.35Z" />
           </svg>
           <span>Commander via WhatsApp</span>

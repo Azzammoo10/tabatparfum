@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -20,13 +20,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useParfums } from "@/hooks/useParfums";
 import { formatMAD } from "@/lib/sizes";
 import { useAppSettings } from "@/hooks/useAppSettings";
-
-const navLinks = [
-  { name: "Homme", href: "/collection/homme", icon: Flame },
-  { name: "Femme", href: "/collection/femme", icon: Flower2 },
-  { name: "Déos", href: "/collection/deodorants-stick", icon: Shield },
-  { name: "Packs", href: "/collection/packs", isGold: true, icon: Crown },
-];
+import { useCategories } from "@/store/useCategoryStore";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,6 +31,11 @@ const Navigation = () => {
   const { totalItems } = useCart();
   const { data: allParfums } = useParfums();
   const { settings } = useAppSettings();
+  const adminCategories = useCategories();
+  const activeAdminCategories = useMemo(
+    () => adminCategories.filter((c) => c.is_active),
+    [adminCategories]
+  );
   const navigate = useNavigate();
   const location = useLocation();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -109,41 +108,32 @@ const Navigation = () => {
 
           {/* Desktop Nav Pills (Left side) */}
           <div className="hidden md:flex items-center gap-1">
-            <Link
-              to="/collection/homme"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
-                location.pathname === "/collection/homme"
-                  ? "bg-foreground text-background shadow-xs"
-                  : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5" />
-              <span>Homme</span>
-            </Link>
+            {activeAdminCategories
+              .filter((cat) => !cat.slug.toLowerCase().includes("pack"))
+              .map((cat) => {
+                const s = cat.slug.toLowerCase();
+                let Icon = Flame;
+                if (s === "femme") Icon = Flower2;
+                else if (s.includes("deodorant")) Icon = Shield;
 
-            <Link
-              to="/collection/femme"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
-                location.pathname === "/collection/femme"
-                  ? "bg-foreground text-background shadow-xs"
-                  : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
-              }`}
-            >
-              <Flower2 className="w-3.5 h-3.5" />
-              <span>Femme</span>
-            </Link>
+                const path = `/collection/${cat.slug}`;
+                const isActive = location.pathname === path;
 
-            <Link
-              to="/collection/deodorants-stick"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
-                location.pathname === "/collection/deodorants-stick"
-                  ? "bg-foreground text-background shadow-xs"
-                  : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Déodorants</span>
-            </Link>
+                return (
+                  <Link
+                    key={cat.id}
+                    to={path}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+                      isActive
+                        ? "bg-foreground text-background shadow-xs"
+                        : "text-foreground/80 hover:text-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{cat.name.replace(/^Parfums\s+/i, "")}</span>
+                  </Link>
+                );
+              })}
           </div>
         </div>
 
@@ -347,61 +337,42 @@ const Navigation = () => {
         <div className="md:hidden absolute top-full left-0 right-0 mt-2 z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
           <div className="bg-background/95 dark:bg-[#151821]/95 backdrop-blur-2xl border border-border/80 dark:border-white/10 rounded-2xl p-4 shadow-xl space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Link
-                to="/collection/homme"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <Flame className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold block">Homme</span>
-                  <span className="text-[10px] text-muted-foreground">Masculin</span>
-                </div>
-              </Link>
+              {activeAdminCategories.map((cat) => {
+                const s = cat.slug.toLowerCase();
+                let Icon = Flame;
+                if (s === "femme") Icon = Flower2;
+                else if (s.includes("deodorant")) Icon = Shield;
+                else if (s.includes("pack")) Icon = Crown;
 
-              <Link
-                to="/collection/femme"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <Flower2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold block">Femme</span>
-                  <span className="text-[10px] text-muted-foreground">Féminin</span>
-                </div>
-              </Link>
+                const isPacks = s.includes("pack");
 
-              <Link
-                to="/collection/deodorants-stick"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/80 hover:border-primary/40 text-foreground transition-all"
-              >
-                <div className="w-8 h-8 rounded-lg bg-secondary text-foreground flex items-center justify-center shrink-0">
-                  <Shield className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold block">Déodorants</span>
-                  <span className="text-[10px] text-muted-foreground">Protection</span>
-                </div>
-              </Link>
-
-              <Link
-                to="/collection/packs"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-primary/10 border border-primary/30 text-primary transition-all shadow-xs"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center shrink-0">
-                  <Crown className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold block">Les Packs</span>
-                  <span className="text-[10px] text-primary/80">Exclusifs</span>
-                </div>
-              </Link>
+                return (
+                  <Link
+                    key={cat.id}
+                    to={`/collection/${cat.slug}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all ${
+                      isPacks
+                        ? "bg-primary/10 border-primary/30 text-primary shadow-xs"
+                        : "bg-card border-border/80 hover:border-primary/40 text-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isPacks ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold block truncate">{cat.name}</span>
+                      <span className="text-[10px] text-muted-foreground truncate block">
+                        {cat.description || "Collection"}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="pt-2 border-t border-border/60 flex flex-col gap-2">

@@ -1,4 +1,4 @@
-import { Instagram, MessageCircle, Clock, Phone } from "lucide-react";
+import { Instagram, MessageCircle, Phone, Sparkles } from "lucide-react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 
 const cleanDisplayPhone = (p?: string) => {
@@ -21,95 +21,87 @@ const Maintenance = () => {
 
   const displayPhone = cleanDisplayPhone(settings.store_phone);
   const waPhone = cleanWhatsAppNumber(settings.whatsapp_phone || settings.store_phone);
-  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent("Bonjour TABAT, je souhaite me renseigner sur vos parfums.")}`;
+  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent("Bonjour TABAT, je souhaite me renseigner.")}`;
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-background text-foreground px-4 py-12 overflow-hidden selection:bg-primary/20">
-      {/* Background ambient luxury glows */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="h-screen w-screen overflow-hidden flex flex-col items-center justify-between p-6 bg-background text-foreground select-none relative">
+      {/* Dynamic luxury ambient glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 sm:w-[550px] sm:h-[550px] bg-primary/12 rounded-full blur-[130px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-accent/8 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-lg w-full text-center space-y-7">
-        {/* Brand Logo */}
-        <div className="flex flex-col items-center">
-          <div className="relative group">
-            <img
-              src="/logo.png"
-              alt="TABAT"
-              className="h-16 md:h-20 w-auto object-contain dark:invert mx-auto transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary mt-2">
-            Haute Parfumerie & Décants
-          </span>
+      {/* Brand Logo Header */}
+      <div className="pt-6 sm:pt-10 text-center z-10">
+        <div className="relative group inline-block">
+          <img
+            src="/logo.png"
+            alt="TABAT"
+            className="h-14 sm:h-20 w-auto object-contain dark:invert mx-auto transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+      </div>
+
+      {/* Main Luxury Glass Card */}
+      <div className="z-10 max-w-sm sm:max-w-md w-full bg-card/80 backdrop-blur-2xl border border-primary/20 rounded-3xl p-7 sm:p-9 text-center space-y-6 shadow-2xl transition-all duration-300 hover:border-primary/40">
+        {/* Status Pill */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-[11px] font-semibold uppercase tracking-widest shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Maintenance</span>
         </div>
 
-        {/* Central Luxury Card */}
-        <div className="bg-card/80 backdrop-blur-md border border-border/80 rounded-2xl p-7 md:p-9 shadow-xl space-y-5">
-          {/* Status Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-            <Clock className="w-3.5 h-3.5" />
-            <span>Mise à niveau en cours</span>
-          </div>
+        {/* Title & Message */}
+        <div className="space-y-2">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Site en Maintenance
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-light px-2">
+            {settings.maintenance_message || "Notre plateforme prépare de nouvelles mises à jour. Nous serons de retour très bientôt."}
+          </p>
+        </div>
 
-          {/* Heading */}
-          <div className="space-y-2">
-            <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Boutique temporairement en maintenance
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-              {settings.maintenance_message || "Nous préparons de nouvelles collections d'exception. Notre boutique sera de nouveau disponible dans quelques instants."}
-            </p>
-          </div>
+        {/* Refined Luxury Contact Pills */}
+        <div className="pt-4 border-t border-border/70 space-y-3">
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground block">
+            Contact & Assistance
+          </span>
 
-          <div className="border-t border-border/60 pt-4 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">
-              Une commande urgente ou une question ? Notre équipe reste à votre écoute :
-            </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/80 hover:border-primary/40 text-foreground text-xs font-semibold transition-all duration-200 cursor-pointer group shadow-xs"
+            >
+              <MessageCircle className="w-4 h-4 text-[#25D366] group-hover:scale-110 transition-transform" />
+              <span>WhatsApp</span>
+            </a>
 
-            {/* Direct Contact CTAs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {settings.instagram_url && (
               <a
-                href={waUrl}
+                href={settings.instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white transition-all text-xs font-semibold shadow-sm hover:shadow-md cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/80 hover:border-primary/40 text-foreground text-xs font-semibold transition-all duration-200 cursor-pointer group shadow-xs"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>WhatsApp Direct</span>
+                <Instagram className="w-4 h-4 text-[#E1306C] group-hover:scale-110 transition-transform" />
+                <span>Instagram</span>
               </a>
+            )}
 
-              {settings.instagram_url && (
-                <a
-                  href={settings.instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] hover:opacity-95 text-white transition-all text-xs font-semibold shadow-sm hover:shadow-md cursor-pointer"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>Suivre sur Instagram</span>
-                </a>
-              )}
-            </div>
-
-            {/* Additional Contact Infos */}
-            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
-              <a
-                href={`tel:${displayPhone.replace(/\s+/g, "")}`}
-                className="hover:text-primary transition-colors flex items-center gap-1.5 font-medium"
-              >
-                <Phone className="w-3.5 h-3.5 text-primary" />
-                <span>{displayPhone}</span>
-              </a>
-            </div>
+            <a
+              href={`tel:${displayPhone.replace(/\s+/g, "")}`}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/80 hover:border-primary/40 text-foreground text-xs font-semibold transition-all duration-200 cursor-pointer group shadow-xs"
+            >
+              <Phone className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
+              <span className="truncate">{displayPhone}</span>
+            </a>
           </div>
         </div>
+      </div>
 
-        {/* Footer info */}
-        <p className="text-xs text-muted-foreground/80">
-          © {new Date().getFullYear()} TABAT Perfumes · Tous droits réservés
-        </p>
+      {/* Footer */}
+      <div className="pb-4 sm:pb-8 text-[11px] text-muted-foreground/80 font-light z-10 tracking-wider">
+        © {new Date().getFullYear()} TABAT Perfumes · Tous droits réservés
       </div>
     </div>
   );

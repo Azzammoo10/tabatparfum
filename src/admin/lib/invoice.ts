@@ -37,31 +37,40 @@ const money = (n: number) => {
   return `${formatted} MAD`;
 };
 
-/** Utility to convert image URL to PNG base64 for jsPDF rendering */
-async function loadImageAsBase64(url: string): Promise<string | null> {
-  if (!url) return null;
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = url;
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || 200;
-        canvas.height = img.naturalHeight || 200;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-          return;
+/** Utility to convert image URL to PNG base64 for jsPDF rendering with aspect ratio */
+async function loadLogoBase64(): Promise<{ data: string; aspect: number } | null> {
+  const sources = ["/logo.png", "/logo.svg"];
+  for (const src of sources) {
+    const res = await new Promise<{ data: string; aspect: number } | null>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = src;
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const w = img.naturalWidth || 300;
+          const h = img.naturalHeight || 100;
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve({
+              data: canvas.toDataURL("image/png"),
+              aspect: w / h,
+            });
+            return;
+          }
+        } catch (e) {
+          console.warn("Canvas conversion warning:", e);
         }
-      } catch (e) {
-        console.warn("Canvas conversion warning:", e);
-      }
-      resolve(null);
-    };
-    img.onerror = () => resolve(null);
-  });
+        resolve(null);
+      };
+      img.onerror = () => resolve(null);
+    });
+    if (res) return res;
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -73,8 +82,8 @@ export async function buildInvoicePdf(order: Order): Promise<jsPDF> {
   const pageH = doc.internal.pageSize.getHeight();
   const M = 45;
 
-  // Pre-load TABAT logo and product item images
-  const logoBase64 = await loadImageAsBase64("/logo.svg");
+  // Pre-load high-res TABAT logo
+  const logoInfo = await loadLogoBase64();
 
   /* Paper background */
   doc.setFillColor(...BRAND.paper);
@@ -85,20 +94,30 @@ export async function buildInvoicePdf(order: Order): Promise<jsPDF> {
   doc.rect(0, 0, pageW, 6, "F");
 
   /* ---------------- HEADER SECTION ---------------- */
-  const headerY = 40;
+  const headerY = 38;
+  let titleX = M;
 
-  // Render TABAT Logo if available
-  if (logoBase64) {
+  // Render TABAT Logo if available with crisp aspect ratio
+  if (logoInfo) {
     try {
-      doc.setFillColor(...BRAND.ink);
-      doc.roundedRect(M, headerY, 44, 44, 8, 8, "F");
-      doc.addImage(logoBase64, "PNG", M + 6, headerY + 6, 32, 32);
+      const logoH = 40;
+      const logoW = Math.min(140, Math.max(40, logoH * logoInfo.aspect));
+      doc.addImage(logoInfo.data, "PNG", M, headerY, logoW, logoH);
+      titleX = M + logoW + 16;
     } catch {
-      // Fallback
+      titleX = M;
     }
+  } else {
+    // Luxury Emblem Fallback
+    doc.setFillColor(...BRAND.ink);
+    doc.roundedRect(M, headerY, 40, 40, 6, 6, "F");
+    doc.setFont("times", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(...BRAND.gold);
+    doc.text("T", M + 13, headerY + 28);
+    titleX = M + 52;
   }
 
-  const titleX = logoBase64 ? M + 56 : M;
   doc.setFont("times", "bold");
   doc.setFontSize(24);
   doc.setTextColor(...BRAND.ink);

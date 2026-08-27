@@ -47,7 +47,7 @@ const SeasonalSection = () => {
   const featured = seasonalProducts.length > 0 ? seasonalProducts : allProducts.slice(0, 4);
 
   return (
-    <section className="w-full mb-16 sm:mb-24 px-4 sm:px-6 max-w-7xl mx-auto relative overflow-hidden">
+    <section className="w-full mb-16 sm:mb-28 px-4 sm:px-6 max-w-7xl mx-auto relative overflow-hidden">
       {/* Ambient Seasonal Floating Particle Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-8 left-[12%] w-3 h-3 rounded-full bg-primary/20 blur-[1px] animate-pulse" style={{ animationDuration: '4s' }} />

@@ -193,7 +193,7 @@ export const useAdminCustomers = () => {
     return { ok: true };
   };
 
-  const deleteCustomer = async (cust: EnrichedCustomer | string) => {
+  const deleteCustomer = async (cust: EnrichedCustomer | string): Promise<{ ok: boolean; error?: string }> => {
     const customerObj = typeof cust === "string" ? customers.find((c) => c.id === cust) : cust;
     const customerId = typeof cust === "string" ? cust : cust.id;
 

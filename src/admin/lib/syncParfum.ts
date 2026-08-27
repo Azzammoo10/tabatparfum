@@ -99,7 +99,6 @@ export const upsertParfumToSupabase = async (p: AdminParfum, imageUrl: string | 
     notes_fond: p.notes.fond,
     price_5ml: p.prices["5ml"],
     price_10ml: p.prices["10ml"],
-    price_20ml: p.prices["20ml"],
     image_label: p.imageLabel,
     image_url: imageUrl,
     is_active: p.active ?? true,
@@ -124,6 +123,8 @@ export const deleteParfumFromSupabase = async (id: string) => {
       if (list?.length) {
         await supabase.storage.from(bucket).remove(list.map((f) => `${id}/${f.name}`));
       }
-    } catch {}
+    } catch (err) {
+      console.warn(`Storage cleanup warning for bucket '${bucket}':`, err);
+    }
   }
 };

@@ -31,19 +31,47 @@ export const useDashboardKPIs = () => {
         const lastStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1)).toISOString();
         const lastEnd = thisStart;
 
-        const [activeRes, ruptureRes, ordersThisRes, ordersLastRes, inProgressRes, customersRes, customersMonthRes] =
+        const [activeRes, ruptureRes, ordersThisRes, ordersLastRes, inProgressRes, allOrdersRes, dbCustomersRes] =
           await Promise.all([
             supabase.from("parfums").select("id", { count: "exact", head: true }).eq("is_active", true),
             supabase.from("parfums").select("id", { count: "exact", head: true }).eq("stock_status", "rupture"),
             supabase.from("orders").select("total_amount, created_at").neq("status", "annulee").gte("created_at", thisStart),
             supabase.from("orders").select("total_amount").neq("status", "annulee").gte("created_at", lastStart).lt("created_at", lastEnd),
             supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "en_attente"),
-            supabase.from("customers").select("id", { count: "exact", head: true }),
-            supabase.from("customers").select("id", { count: "exact", head: true }).gte("created_at", thisStart),
+            supabase.from("orders").select("customer_phone, customer_email, customer_name, created_at"),
+            supabase.from("customers").select("id, phone, email, name, created_at"),
           ]);
 
         const sum = (rows: { total_amount: number }[] | null) =>
           (rows ?? []).reduce((acc, r) => acc + Number(r.total_amount ?? 0), 0);
+
+        // Aggregate unique clients from both orders and customers table
+        const clientKeys = new Set<string>();
+        const clientMonthKeys = new Set<string>();
+
+        (dbCustomersRes.data ?? []).forEach((c) => {
+          const rawPhone = c.phone ? c.phone.replace(/[^0-9]/g, "") : "";
+          const key = rawPhone || c.email?.toLowerCase() || c.name?.toLowerCase();
+          if (key) {
+            clientKeys.add(key);
+            if (c.created_at && new Date(c.created_at) >= new Date(thisStart)) {
+              clientMonthKeys.add(key);
+            }
+          }
+        });
+
+        (allOrdersRes.data ?? []).forEach((o) => {
+          const rawPhone = o.customer_phone ? o.customer_phone.replace(/[^0-9]/g, "") : "";
+          const emailKey = o.customer_email && !o.customer_email.endsWith("@client.tabat.ma") ? o.customer_email.toLowerCase() : "";
+          const nameKey = o.customer_name?.trim().toLowerCase() || "client";
+          const key = rawPhone || emailKey || nameKey;
+          if (key) {
+            clientKeys.add(key);
+            if (o.created_at && new Date(o.created_at) >= new Date(thisStart)) {
+              clientMonthKeys.add(key);
+            }
+          }
+        });
 
         if (!alive) return;
         setKpis({
@@ -53,8 +81,8 @@ export const useDashboardKPIs = () => {
           revenueLastMonth: sum(ordersLastRes.data as { total_amount: number }[] | null),
           ordersThisMonth: (ordersThisRes.data ?? []).length,
           ordersInProgress: inProgressRes.count ?? 0,
-          customers: customersRes.count ?? 0,
-          customersThisMonth: customersMonthRes.count ?? 0,
+          customers: clientKeys.size,
+          customersThisMonth: clientMonthKeys.size,
         });
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : "Erreur de chargement");

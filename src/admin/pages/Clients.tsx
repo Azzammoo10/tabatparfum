@@ -6,7 +6,7 @@ import {
   Users,
   Crown,
   TrendingUp,
-  DollarSign,
+  Coins,
   Search,
   MessageCircle,
   Eye,
@@ -77,7 +77,8 @@ const Clients = () => {
     const total = customers.length;
     const vip = customers.filter((c) => c.total_spent >= 500 || c.total_orders >= 2).length;
     const totalRevenue = customers.reduce((sum, c) => sum + Number(c.total_spent || 0), 0);
-    const avgBasket = total > 0 ? Math.round(totalRevenue / total) : 0;
+    const totalOrders = customers.reduce((sum, c) => sum + Number(c.total_orders || 0), 0);
+    const avgBasket = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
     return { total, vip, totalRevenue, avgBasket };
   }, [customers]);
 
@@ -202,7 +203,7 @@ const Clients = () => {
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-            <DollarSign className="w-5 h-5" />
+            <Coins className="w-5 h-5" />
           </div>
         </div>
       </div>
@@ -558,7 +559,7 @@ const Clients = () => {
                             </span>
                           </div>
                           <div className="text-muted-foreground text-[11px] truncate mt-1">
-                            {ord.items.map((it) => `${it.parfum_name || (it as any).name || "Produit"} (${it.size}) × ${it.quantity}`).join(", ")}
+                            {ord.items.map((it) => `${it.parfum_name || it.name || "Produit"} (${it.size || ""}) × ${it.quantity}`).join(", ")}
                           </div>
                         </div>
 

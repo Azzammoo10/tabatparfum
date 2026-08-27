@@ -63,7 +63,10 @@ export const useFlaconnage = () => {
         });
       });
 
-      setRows((flaconRes.data ?? []) as FlaconRow[]);
+      const validRows = ((flaconRes.data ?? []) as FlaconRow[]).filter(
+        (r) => (r.size as string) !== "20ml"
+      );
+      setRows(validRows);
       setUsed(acc);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur de chargement");

@@ -21,7 +21,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    
+
     try {
       const { error: err } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -29,8 +29,21 @@ const AdminLogin = () => {
       });
 
       if (err) {
-        console.error("Supabase Auth error:", err);
-        setError(err.message === "Invalid login credentials" ? "Email ou mot de passe Supabase incorrect." : err.message);
+        console.error("Auth login error:", err);
+        const lowerMsg = (err.message || "").toLowerCase();
+        if (
+          lowerMsg.includes("invalid") ||
+          lowerMsg.includes("credentials") ||
+          lowerMsg.includes("grant")
+        ) {
+          setError("Email ou mot de passe incorrect.");
+        } else if (lowerMsg.includes("too many") || lowerMsg.includes("rate")) {
+          setError("Trop de tentatives de connexion. Veuillez réessayez dans quelques minutes.");
+        } else if (lowerMsg.includes("fetch") || lowerMsg.includes("network")) {
+          setError("Impossible de contacter le serveur. Veuillez vérifier votre connexion.");
+        } else {
+          setError("Identifiants incorrects ou erreur de connexion.");
+        }
         setSubmitting(false);
         return;
       }
@@ -39,8 +52,7 @@ const AdminLogin = () => {
       navigate("/admin", { replace: true });
     } catch (err) {
       setSubmitting(false);
-      const msg = err instanceof Error ? err.message : "Erreur lors de la connexion.";
-      setError(msg);
+      setError("Identifiants incorrects ou erreur de connexion.");
     }
   };
 

@@ -6,6 +6,7 @@ export type AppSettings = {
   maintenance_message: string;
   instagram_url: string;
   whatsapp_phone: string;
+  store_phone?: string;
   bot_enabled: boolean;
   bot_name: string;
   bot_welcome: string;
@@ -28,15 +29,6 @@ const getLocalSettings = (): AppSettings => {
     const saved = localStorage.getItem("tabat_app_settings");
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed.store_email === "contact@tabatperfume.com") {
-        parsed.store_email = "";
-      }
-      if (parsed.store_phone && (parsed.store_phone.includes("6 63") || parsed.store_phone.includes("663848099") || parsed.store_phone.includes("600000000"))) {
-        parsed.store_phone = "+212 752-850156";
-      }
-      if (parsed.whatsapp_phone && (parsed.whatsapp_phone.includes("663848099") || parsed.whatsapp_phone.includes("600000000"))) {
-        parsed.whatsapp_phone = "212752850156";
-      }
       return { ...DEFAULTS, ...parsed };
     }
   } catch {
@@ -130,7 +122,7 @@ export const useAppSettings = () => {
 
     // Upsert into Supabase for persistence across devices
     try {
-      const { store_name, ...dbPayload } = patch;
+      const { store_name, store_phone, ...dbPayload } = patch;
       const { error } = await supabase
         .from("app_settings")
         .upsert({ id: true, ...dbPayload });

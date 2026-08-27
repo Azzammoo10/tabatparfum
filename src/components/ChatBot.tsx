@@ -59,10 +59,16 @@ const DEFAULT_QAS: QA[] = [
 const ChatBot = () => {
   const { settings } = useAppSettings();
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [qas, setQas] = useState<QA[]>(DEFAULT_QAS);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const rawPhone = settings.whatsapp_phone || settings.store_phone || "212752850156";
+  const waNumber = rawPhone.replace(/[^0-9]/g, "") || "212752850156";
+  const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Bonjour TABAT, je souhaite avoir des informations sur vos parfums.")}`;
+  const instagramUrl = settings.instagram_url || "https://www.instagram.com/tabatperfumes";
 
   useEffect(() => {
     if (!settings.bot_enabled) return;
@@ -96,75 +102,154 @@ const ChatBot = () => {
   };
 
   const contactWhatsapp = () => {
-    window.open(WHATSAPP_LINK, "_blank");
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
     <>
-      {/* Floating Action Buttons Stack (Instagram -> WhatsApp -> ChatBot) */}
-      <div className="fixed bottom-5 right-5 z-[60] flex flex-col-reverse items-center gap-3 pointer-events-auto">
-        {/* 1. ChatBot launcher button (En bas) */}
-        {settings.bot_enabled && (
-          <button
-            type="button"
-            aria-label={open ? "Fermer le chat" : "Ouvrir le chat"}
-            onClick={() => setOpen((v) => !v)}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-[#C9A96E] to-[#a0824b] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
-          >
-            <span className={`absolute inset-0 rounded-full bg-[#C9A96E]/40 pointer-events-none ${open ? "" : "animate-ping"}`} />
-            <span className="relative z-10">
-              {open ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
-            </span>
-          </button>
-        )}
-
-        {/* 2. WhatsApp Launcher Button (Au milieu) */}
-        <a
-          href={WHATSAPP_LINK}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Discuter sur WhatsApp"
-          className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
-          title="Discuter sur WhatsApp (+212 752-850156)"
+      {/* Single Luxury Floating Trigger Pill */}
+      <div className="fixed bottom-5 right-4 sm:right-6 z-[60] pointer-events-auto">
+        <button
+          type="button"
+          onClick={() => {
+            if (open) {
+              setOpen(false);
+            } else {
+              setMenuOpen((v) => !v);
+            }
+          }}
+          className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-black/90 hover:bg-black text-white border border-primary/40 shadow-2xl backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer hover:border-primary"
+          aria-label="Besoin d'aide"
         >
-          <span className="absolute inset-0 rounded-full bg-[#25D366]/40 animate-ping pointer-events-none" />
-          <WhatsAppIcon className="w-7 h-7 relative z-10 text-white" />
-        </a>
-
-        {/* 3. Instagram Launcher Button (En haut) */}
-        <a
-          href="https://www.instagram.com/tabatperfumes"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Suivez-nous sur Instagram"
-          className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform relative"
-          title="Suivez-nous sur Instagram (@tabatperfumes)"
-        >
-          <span className="absolute inset-0 rounded-full bg-[#dc2743]/30 animate-pulse pointer-events-none" />
-          <Instagram className="w-7 h-7 relative z-10 text-white" />
-        </a>
+          {open || menuOpen ? (
+            <>
+              <X className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold tracking-wider uppercase">Fermer</span>
+            </>
+          ) : (
+            <>
+              <div className="relative flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400" />
+              </div>
+              <span className="text-xs font-semibold tracking-wider uppercase">Besoin d'Aide ?</span>
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Chat window */}
+      {/* Luxury Contact Speed Dial Sheet (Modal when menuOpen) */}
+      {menuOpen && !open && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[65] animate-in fade-in duration-200"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="fixed bottom-20 right-4 sm:right-6 z-[70] w-[min(340px,calc(100vw-2rem))] bg-card border border-primary/30 rounded-3xl p-4 shadow-2xl backdrop-blur-2xl space-y-2.5 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            <div className="flex items-center justify-between px-1 pb-1 border-b border-border/60">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground">Assistance TABAT</span>
+              </div>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-full cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 1. WhatsApp Action */}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 text-foreground hover:bg-[#25D366]/20 transition-all group cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                <WhatsAppIcon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold text-foreground group-hover:text-[#25D366] transition-colors">
+                  WhatsApp Direct
+                </div>
+                <div className="text-[11px] text-muted-foreground truncate">
+                  Réponse rapide par message
+                </div>
+              </div>
+            </a>
+
+            {/* 2. Virtual Assistant IA Action */}
+            {settings.bot_enabled && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setOpen(true);
+                }}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-primary/10 border border-primary/30 text-foreground hover:bg-primary/20 transition-all group w-full text-left cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Assistant Virtuel IA
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    Conseils parfums & FAQ instantanés
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {/* 3. Instagram Action */}
+            {instagramUrl && (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/80 border border-border text-foreground hover:border-primary/40 transition-all group cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                  <Instagram className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Instagram Officiel
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    @tabatperfumes
+                  </div>
+                </div>
+              </a>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Chat Window */}
       {settings.bot_enabled && open && (
         <div
-          className="fixed bottom-20 right-3 z-[60] w-[min(340px,calc(100vw-1.5rem))] h-[min(460px,calc(100vh-7rem))] bg-white dark:bg-[#0F0F0F] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 flex flex-col overflow-hidden origin-bottom-right"
+          className="fixed bottom-20 right-4 z-[70] w-[min(340px,calc(100vw-1.5rem))] h-[min(460px,calc(100vh-7rem))] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden origin-bottom-right backdrop-blur-2xl"
           style={{ animation: "chatbot-in 280ms cubic-bezier(0.16,1,0.3,1)" }}
         >
           {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-br from-[#111827] to-[#1F2937] dark:from-[#1A1A1A] dark:to-[#0F0F0F] text-white flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-full bg-[#C9A96E] flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-[#111827]" />
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#111827]" />
+          <div className="px-4 py-3 bg-secondary border-b border-border flex items-center gap-3 text-foreground">
+            <div className="relative w-9 h-9 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 border border-primary/30">
+              <Sparkles className="w-4 h-4" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-background" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">{settings.bot_name}</div>
-              <div className="text-xs text-white/60">En ligne · Réponse instantanée</div>
+              <div className="text-xs font-bold truncate">{settings.bot_name}</div>
+              <div className="text-[10px] text-muted-foreground">En ligne · Support TABAT</div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="p-1.5 rounded-md hover:bg-white/10"
+              className="p-1.5 rounded-full hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               aria-label="Fermer"
             >
               <X className="w-4 h-4" />
@@ -174,7 +259,7 @@ const ChatBot = () => {
           {/* Messages */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[#F8F9FA] dark:bg-[#0F0F0F]"
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-background/50"
           >
             {messages.map((m) => (
               <div
@@ -183,10 +268,10 @@ const ChatBot = () => {
                 style={{ animation: "chatbot-msg 260ms ease-out" }}
               >
                 <div
-                  className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
+                  className={`max-w-[82%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed shadow-xs whitespace-pre-wrap ${
                     m.from === "user"
-                      ? "bg-[#111827] text-white dark:bg-[#C9A96E] dark:text-[#111827] rounded-br-sm"
-                      : "bg-white dark:bg-[#1A1A1A] text-[#111827] dark:text-[#F9FAFB] border border-black/5 dark:border-white/10 rounded-bl-sm"
+                      ? "bg-primary text-primary-foreground font-medium rounded-br-xs"
+                      : "bg-card text-foreground border border-border rounded-bl-xs"
                   }`}
                 >
                   {m.text}
@@ -195,23 +280,23 @@ const ChatBot = () => {
             ))}
             {typing && (
               <div className="flex justify-start" style={{ animation: "chatbot-msg 260ms ease-out" }}>
-                <div className="bg-white dark:bg-[#1A1A1A] border border-black/5 dark:border-white/10 px-3.5 py-2.5 rounded-2xl rounded-bl-sm flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#C9A96E]" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 rounded-full bg-[#C9A96E]" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 rounded-full bg-[#C9A96E]" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "300ms" }} />
+                <div className="bg-card border border-border px-3.5 py-2.5 rounded-2xl rounded-bl-xs flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" style={{ animation: "chatbot-dot 1.2s infinite", animationDelay: "300ms" }} />
                 </div>
               </div>
             )}
           </div>
 
           {/* Quick questions */}
-          <div className="border-t border-black/5 dark:border-white/10 bg-white dark:bg-[#0F0F0F] px-3 py-3 space-y-2">
-            <div className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280] dark:text-[#9CA3AF] px-1">
+          <div className="border-t border-border bg-card px-3 py-3 space-y-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1">
               Questions fréquentes
             </div>
-            <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto no-scrollbar">
               {qas.length === 0 && (
-                <div className="text-xs text-[#6B7280] dark:text-[#9CA3AF] px-1">
+                <div className="text-xs text-muted-foreground px-1">
                   Aucune question configurée.
                 </div>
               )}
@@ -220,7 +305,7 @@ const ChatBot = () => {
                   key={qa.id}
                   type="button"
                   onClick={() => ask(qa)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1A1A] hover:bg-[#C9A96E] hover:text-[#111827] dark:hover:bg-[#C9A96E] border border-black/5 dark:border-white/10 text-[#111827] dark:text-[#F9FAFB] transition-colors"
+                  className="text-xs px-2.5 py-1 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground border border-border text-foreground transition-colors cursor-pointer text-left"
                 >
                   {qa.question}
                 </button>
@@ -229,7 +314,7 @@ const ChatBot = () => {
             <button
               type="button"
               onClick={contactWhatsapp}
-              className="w-full mt-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors"
+              className="w-full mt-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
             >
               <WhatsAppIcon className="w-4 h-4" /> Discuter sur WhatsApp
             </button>

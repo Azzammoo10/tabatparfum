@@ -18,7 +18,6 @@ export type Parfum = {
   notes_fond: string[];
   price_5ml: number;
   price_10ml: number;
-  price_20ml?: number;
   image_label: string;
   image_url: string | null;
   is_active: boolean;
